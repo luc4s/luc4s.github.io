@@ -46,15 +46,15 @@
 function perturbGradient() {
      for (var i = 0; i < 128; ++i) {
           for (var j = 0; j < 128; ++j) {
-               var angle = Math.random() * 2 * Math.PI * 0.01;
+               var angle = (Math.random() - 0.5) * 2 * Math.PI * 0.01;
                //console.log(angle);
                var sin = Math.sin(angle);
                var cos = Math.cos(angle);
 
                var x0 = gradient[i][j][0];
                var y0 = gradient[i][j][1];
-               var x = x0 + (x0 * cos - y0 * sin);
-               var y = y0 + (x0 * sin - y0 * cos);
+               var x = x0 + cos;
+               var y = y0 + sin;
                var l = Math.sqrt((x * x) + (y * y));
                gradient[i][j] = [x/l, y/l];
           }

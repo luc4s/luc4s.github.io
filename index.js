@@ -125,12 +125,12 @@ function ondulate() {
 	back.geometry.computeVertexNormals();
 }
 ondulate();
-perturbGradient();
+//perturbGradient();
 
 
 function tick(timestamp) {
   renderer.render(scene, camera);
-  perturbGradient();
+  //perturbGradient();
   ondulate();
   //window.setTimeout(requestAnimationFrame, 13, tick);
   //back.rotation.x += 0.01;
