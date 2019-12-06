@@ -19,7 +19,6 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 
-
 var light = new THREE.DirectionalLight(0xFFFFFF, 0.2);
 light.position.set(-3, 3, 10);
 light.target.position.set(3, -3, -3);
@@ -67,9 +66,7 @@ var m =  new THREE.MeshStandardMaterial({
 });
 
 var size = 16;
-
 var vertices = new Float32Array(size * size * 3);
-var indices = [];
 function generateTriangulation() {
 	var geom = new THREE.BufferGeometry();	
 	var array = [];
@@ -77,9 +74,6 @@ function generateTriangulation() {
 	var s = 2;
 	var c = 0;
 	function newVx(x, y) {
-		//var z = perlin((x + 32) / s, (y + 32) / s) - 0.5;
-		//console.log(z);
-		indices[c / 3] = [x, y];
 		vertices[c++] = x + (Math.random() * 0.2 - 0.1);
 		vertices[c++] = y + (Math.random() * 0.2 - 0.1);;
 		vertices[c++] = 0;
@@ -117,28 +111,33 @@ function generateTriangulation() {
 var back = generateTriangulation();
 scene.add(back);
 
-function ondulate() {
+function applyNoiseToGeometry() {
 	var length = size;
 	for (var i = 2; i < vertices.length; i += 3) {
 		var vIdx = Math.floor(i / 3);
 		var x = Math.floor(vIdx / length) % length;
 		var y = (vIdx - x * length) % length;
-		//console.log(vIdx, indices.length);
-		//var x = indices[vIdx][0];
-		//var y = indices[vIdx][1];
 		vertices[i] = perlin(x / 2, y / 2) - 0.5;
 	}
 	back.geometry.getAttribute('position').needsUpdate = true;
 	back.geometry.computeVertexNormals();
 }
-//perturbGradient();
-ondulate();
+applyNoiseToGeometry();
 
+var mouse = {
+	x: 0,
+	y: 0,
+};
+document.addEventListener('mousemove', function (event) {
+	mouse.x = size * (event.clientX / window.innerWidth);
+	mouse.y = size - (size * (event.clientY / window.innerHeight));
+	console.log(mouse);
+});
 
 function tick(timestamp) {
   renderer.render(scene, camera);
-  perturbGradient();
-  ondulate();
+  perturbGradient(mouse.x / 2, mouse.y / 2);
+  applyNoiseToGeometry();
   //window.setTimeout(requestAnimationFrame, 13, tick);
   //back.rotation.x += 0.01;
   //back.rotation.y += 0.02;
