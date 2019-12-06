@@ -50,14 +50,14 @@ function perturbGradient() {
                var x0 = gradient[i][j][0];
                var y0 = gradient[i][j][1];
                var oldAngle = Math.atan2(y0, x0);
-               var angle = oldAngle + 0.01;// * (Math.random() - 0.5);
+               var angle = oldAngle + 0.01;// * (Math.random();
 
                //console.log(angle);
                var sin = Math.sin(angle);
                var cos = Math.cos(angle);
                var x = cos;//cos * x0 - sin * y0;
                var y = sin;//sin * x0 - cos * y0;
-               //var l = Math.sqrt((x * x) + (y * y));
+               var l = Math.sqrt((x * x) + (y * y));
                gradient[i][j] = [x/l, y/l];
           }
      }

@@ -27,13 +27,14 @@ pLight = new THREE.PointLight(0x004400, 16, 3);
 pLight.position.set(-1.5, 1, 3);
 //scene.add(pLight)
 
-var light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-light.position.set(2, 2, 3);
+//var light = new THREE.DirectionalLight(0xffbd48, 0.2);
+var light = new THREE.DirectionalLight(0xFFFFFF, 0.2);
+light.position.set(3, 3, 10);
 scene.add(light);
 
-var light = new THREE.DirectionalLight(0xBD48FF, 0.2);
-light.position.set(-2, -5, 5);
-//light.target.position.set(0, 0, -3);
+var light = new THREE.DirectionalLight(0xBD48FF, 0.3);
+light.position.set(-3, -3, 10);
+
 scene.add(light);
 
 var geom = new THREE.BoxGeometry(1, 1, 1);
@@ -41,7 +42,7 @@ var geom = new THREE.BoxGeometry(1, 1, 1);
 var material = new THREE.MeshStandardMaterial({
 	color: '#FFFFFF',
 	emissive: 0x444444,
-	roughness: 0.2,
+	roughness: 1,
 	metalness: 0,
 });
 
@@ -66,8 +67,8 @@ var m =  new THREE.MeshStandardMaterial({
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.3,
-	metalness: 0.4,
+	roughness: 0.4,
+	metalness: 0.3,
 });
 
 var size = 4;
