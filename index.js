@@ -18,22 +18,22 @@ window.requestAnimationFrame = window.requestAnimationFrame
 															|| window.webkitRequestAnimationFrame
 															|| window.msRequestAnimationFrame;
 
-scene.add(new THREE.AmbientLight( 0x202020 ));
+scene.add(new THREE.AmbientLight( 0x303030 ));
 
 var pLight = new THREE.PointLight(0x440000, 16, 3);
-pLight.position.set(1.5, 1, 2);
-scene.add(pLight)
+pLight.position.set(1.5, 1, 3);
+//scene.add(pLight)
 pLight = new THREE.PointLight(0x004400, 16, 3);
-pLight.position.set(-1.5, 1, 2);
-scene.add(pLight)
+pLight.position.set(-1.5, 1, 3);
+//scene.add(pLight)
 
 var light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-light.position.set(0, 2, 5);
+light.position.set(2, 2, 3);
 scene.add(light);
 
 var light = new THREE.DirectionalLight(0xBD48FF, 0.2);
-light.position.set(0, -5, 5);
-light.target.position.set(0, 0, -5);
+light.position.set(-2, -5, 5);
+//light.target.position.set(0, 0, -3);
 scene.add(light);
 
 var geom = new THREE.BoxGeometry(1, 1, 1);
@@ -66,8 +66,8 @@ var m =  new THREE.MeshStandardMaterial({
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.5,
-	metalness: 0.2,
+	roughness: 0.3,
+	metalness: 0.4,
 });
 
 var size = 4;
@@ -125,12 +125,12 @@ function ondulate() {
 	back.geometry.computeVertexNormals();
 }
 ondulate();
-//perturbGradient();
+perturbGradient();
 
 
 function tick(timestamp) {
   renderer.render(scene, camera);
-  //perturbGradient();
+  perturbGradient();
   ondulate();
   //window.setTimeout(requestAnimationFrame, 13, tick);
   //back.rotation.x += 0.01;
