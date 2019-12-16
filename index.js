@@ -28,20 +28,23 @@ var camera = new THREE.PerspectiveCamera(
 camera.position.z = 5;
 
 // Scene lights
-var light = new THREE.DirectionalLight(0xFFFFFF, 0.2);
-light.position.set(-3, 3, 10);
-light.target.position.set(3, -3, -3);
+var lightIntensity = 0.35;
+var f = 0.8;
+var light = new THREE.DirectionalLight(0xFFFFFF, lightIntensity);
+light.position.set(f, -f, f);
+light.target.position.set(-f, f, f);
+scene.add(light.target);
+scene.add(light);
+light = new THREE.DirectionalLight(0xBD48FF, lightIntensity);
+light.position.set(-f, f, f);
+light.target.position.set(f, -f,-f);
+scene.add(light.target);
 scene.add(light);
 
-var light = new THREE.DirectionalLight(0xBD48FF, 0.3);
-light.position.set(3, -3, 10);
-light.target.position.set(-3, 3, -3);
+scene.add(new THREE.AmbientLight(0x202020));
 
-scene.add(light);
-scene.add(new THREE.AmbientLight(0x101010));
-
-var size = 16;
-var noiseSize = 8;
+var size = 64;
+var noiseSize = 128;
 
 // Material setup
 // Generate gradients texture for material
@@ -72,18 +75,12 @@ var m =  new THREE.MeshStandardMaterial({
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.4,
-	metalness: 0.7,
+	roughness: 0.5,
+	metalness: 0.8,
 	defines: { NOISE_SIZE: noiseSize },
-	//wireframe: true,
 });
-/*
-m = new THREE.MeshBasicMaterial({
-	wireframe: true,
-});
-//*/
 
-// Modify shader a bit to add perlin noise transform
+// Modify shader to add perlin noise transform
 //*
 var theta = { value: 0.0 };
 m.onBeforeCompile = function(shader) {
@@ -91,20 +88,20 @@ m.onBeforeCompile = function(shader) {
 		shader.vertexShader
 			.replace(
 				'#include <common>',
-				'#include <common>\n' + shaderUtils)
+				'#include <common>\n' + document.getElementById('fragShader').textContent)
 			.replace(
 				'#include <begin_vertex>',
-				'#include <begin_vertex>\n' + shaderVertexTransform);
+				'#include <begin_vertex>\n' + 'transformed.z = (perlin(uv) - 0.5) * 10.0;');
 	shader.uniforms.gradientTex = { value: gradientTex };
 	shader.uniforms.theta = theta;
 };
 //*/
 
-var vertices = new Float32Array(size * size * 3 * 6);
 function generateTriangulation() {
 	var c = 0;
 	var cUV = 0;
 
+	var vertices = new Float32Array(size * size * 3 * 6);
 	var uvs = new Float32Array(size * size * 2 * 6);
 	var normals = new Float32Array(vertices.length);
 
@@ -132,9 +129,8 @@ function generateTriangulation() {
 	geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 	geom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-	//geom.computeVertexNormals();
 	var mesh = new THREE.Mesh(geom, m);
-	mesh.position.z = -10;
+	mesh.position.z = 0;
 	mesh.position.y = -size / 2;
 	mesh.position.x = -size / 2;
 	return mesh;
@@ -143,47 +139,45 @@ function generateTriangulation() {
 var shape = generateTriangulation();
 scene.add(shape);
 
-function applyNoiseToGeometry() {
-	var length = size;
-	for (var i = 2; i < vertices.length; i += 3) {
-		var vIdx = Math.floor(i / 3);
-		var x = Math.floor(vIdx / length) % length;
-		var y = (vIdx - x * length) % length;
-		vertices[i] = perlin(x / 2, y / 2);
+function tick() {
+	var lastUpdate = 0;
+	function loop(timestamp) {
+		var dt = timestamp - lastUpdate;
+		if (dt > 16) {
+			lastUpdate = timestamp;
+			theta.value += 0.02;
+		  renderer.render(scene, camera);
+		}
+	  window.requestAnimationFrame(loop);
 	}
-	shape.geometry.getAttribute('position').needsUpdate = true;
-	shape.geometry.computeVertexNormals();
-}
-
-function tick(timestamp) {
-  window.requestAnimationFrame(tick);
-	if (!this.lastUpdate) {
-		this.lastUpdate = 0;
-	}
-	var dt = timestamp - this.lastUpdate
-	if (dt < 33) {
-		return;
-	}
-	this.lastUpdate = timestamp;
-	theta.value += 0.01;
-  //perturbGradient();
-  //applyNoiseToGeometry();
-  renderer.render(scene, camera);
+	loop(Math.Infinity);
 }
 
 function updatePlane() {
-	var width = window.innerWidth;
-	var height = window.innerHeight;
-	
-	var unprojected = new THREE.Vector4(0, 1, 0, 1).applyMatrix4(camera.projectionMatrix);
-	console.log(unprojected);
+	var projected = new THREE.Vector4(size / 2, size / 2, -10, 1)
+		.applyMatrix4(camera.matrixWorldInverse);
+	projected.w = 1.0;
+	projected
+		.applyMatrix4(camera.projectionMatrix)
+		.divideScalar(projected.w);
+	var scale = 1.0 / Math.min(projected.x, projected.y);
+	shape.scale.setScalar(scale);
+	shape.position.y = (-size / 2) * scale;
+	shape.position.x = (-size / 2) * scale;
 }
 
-window.addEventListener( 'resize', function() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize', function() {
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  updatePlane();
+  renderer.setSize(width, height);
+  updatePlane(width, height);
 }, false );
 
+window.addEventListener('mousemove', function(e) {
+	//console.log("MouseMV: ", e.clientX, ", ", e.clientY);
+});
+
+updatePlane();
 tick();
