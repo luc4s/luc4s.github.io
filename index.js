@@ -28,20 +28,16 @@ var camera = new THREE.PerspectiveCamera(
 camera.position.z = 5;
 
 // Scene lights
-var lightIntensity = 0.35;
+var lightIntensity = 0.4;
 var f = 0.8;
 var light = new THREE.DirectionalLight(0xFFFFFF, lightIntensity);
 light.position.set(f, -f, f);
-light.target.position.set(-f, f, f);
-scene.add(light.target);
 scene.add(light);
 light = new THREE.DirectionalLight(0xBD48FF, lightIntensity);
 light.position.set(-f, f, f);
-light.target.position.set(f, -f,-f);
-scene.add(light.target);
 scene.add(light);
 
-scene.add(new THREE.AmbientLight(0x202020));
+//scene.add(new THREE.AmbientLight(0x666666));
 
 var size = 32;
 var noiseSize = 64;
@@ -70,13 +66,27 @@ var gradientTex = new THREE.DataTexture(
 	THREE.NearestFilter,
 	THREE.NearestFilter);
 
+var accData = new Float32Array(size * size * 3);
+accData.fill(0);
+var accTex = new THREE.DataTexture(
+	accData,
+	size,
+	size,
+	THREE.RGBFormat,
+	THREE.FloatType,
+	THREE.UVMapping,
+	THREE.MirroredRepeatWrapping,
+	THREE.MirroredRepeatWrapping,
+	THREE.NearestFilter,
+	THREE.NearestFilter);
+
 var m =  new THREE.MeshStandardMaterial({
 	aoMap: gradientTex,
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.5,
-	metalness: 0.8,
+	roughness: 0.3,
+	metalness: 1,
 	defines: { NOISE_SIZE: noiseSize },
 });
 
@@ -91,8 +101,9 @@ m.onBeforeCompile = function(shader) {
 				'#include <common>\n' + document.getElementById('fragShader').textContent)
 			.replace(
 				'#include <begin_vertex>',
-				'#include <begin_vertex>\n' + 'transformed.z = (perlin(uv) - 0.5) * 10.0;');
+				'#include <begin_vertex>\n' + document.getElementById('vertShader').textContent);
 	shader.uniforms.gradientTex = { value: gradientTex };
+	shader.uniforms.accTex = { value: accTex };
 	shader.uniforms.theta = theta;
 };
 //*/
@@ -104,11 +115,12 @@ function generateTriangulation() {
 	var vertices = new Float32Array(size * size * 3 * 6);
 	var uvs = new Float32Array(size * size * 2 * 6);
 	var normals = new Float32Array(vertices.length);
+	var rAxis = new Float32Array(vertices.length);
 
 	function pushVertex(x, y) {
-		vertices[c] = x;	normals[c++] = 0;
-		vertices[c] = y;	normals[c++] = 0;
-		vertices[c] = 0;	normals[c++] = -1;
+		vertices[c] = x; normals[c++] = 0;
+		vertices[c] = y; normals[c++] = 0;
+		vertices[c] = 0; normals[c++] = -1;
 		uvs[cUV++] = x / size;
 		uvs[cUV++] = y / size;
 	}
@@ -139,13 +151,31 @@ function generateTriangulation() {
 var shape = generateTriangulation();
 scene.add(shape);
 
+window.addEventListener('resize', function() {
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+  updatePlane(width, height);
+}, false );
+
+var mouseCoords = null;
+window.addEventListener('mousemove', function(e) {
+	if (mouseCoords == null) {
+		mouseCoords = {};
+	}
+	mouseCoords.x = (event.clientX / window.innerWidth) * size;
+	mouseCoords.y = (1.0 - event.clientY / window.innerHeight) * size;
+});
+
 function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.01;
+			theta.value += 0.007 * dt / 16;
 		  renderer.render(scene, camera);
 		}
 	  window.requestAnimationFrame(loop);
@@ -165,19 +195,6 @@ function updatePlane() {
 	shape.position.y = (-size / 2) * scale;
 	shape.position.x = (-size / 2) * scale;
 }
-
-window.addEventListener('resize', function() {
-	var width = window.innerWidth;
-	var height = window.innerHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-  updatePlane(width, height);
-}, false );
-
-window.addEventListener('mousemove', function(e) {
-	//console.log("MouseMV: ", e.clientX, ", ", e.clientY);
-});
 
 updatePlane();
 tick();

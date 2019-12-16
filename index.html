@@ -6,7 +6,10 @@
 	</head>
 	<body>
 		<script id="fragShader" type="x-shader/x-fragment">
+			attribute vec2 rAxis;
+
 			uniform sampler2D gradientTex;
+			uniform sampler2D accTex;
 			uniform float theta;
 
 			const float nSizef = float(NOISE_SIZE);
@@ -38,6 +41,9 @@
 				float ix1 = mix(n11, n10, d.x);
 				return mix(ix1, ix0, d.y);
 			}
+		</script>
+		<script id="vertShader" type="x-shader/x-vertex">
+			transformed.z = (perlin(uv) - 0.5) * 10.0;
 		</script>
 		<script src="./three.min.js"></script>
 		<script src="./index.js"></script>
