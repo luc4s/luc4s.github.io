@@ -173,9 +173,9 @@ function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
+		theta.value += 0.007;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.007 * dt / 16;
 		  renderer.render(scene, camera);
 		}
 	  window.requestAnimationFrame(loop);
