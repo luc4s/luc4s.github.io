@@ -43,8 +43,8 @@ scene.add(light);
 
 scene.add(new THREE.AmbientLight(0x202020));
 
-var size = 64;
-var noiseSize = 128;
+var size = 32;
+var noiseSize = 64;
 
 // Material setup
 // Generate gradients texture for material
@@ -145,7 +145,7 @@ function tick() {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.02;
+			theta.value += 0.01;
 		  renderer.render(scene, camera);
 		}
 	  window.requestAnimationFrame(loop);
