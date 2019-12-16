@@ -1,15 +1,32 @@
 body {
 	margin: 0;
+	font-family: 'Open Sans', sans-serif;
+}
+canvas {
+	position: fixed;
+	top: 0;
+	left: 0;
 }
 .container {
 	z-index: 2;
-	width: 800px;
-	height: 200px;
-	position: absolute;
-	top: 20px;
-	left: 20px;
-	background-color: #FFFFFF;
-	border-radius: 12px;
-	padding: 10px;
+	margin: auto;
 	opacity: 0.9;
+	width: 100%;
+}
+.subcontainer {
+	background-color: #FFFFFF;
+	padding: 8px;
+	max-width: 800px;
+	margin: auto;
+	margin-top: 32px;
+}
+.subcontainer.header h1 {
+	font-size: 3em;
+	margin: 0;
+}
+.subcontainer h1 {
+	margin: 5px 0;
+}
+.subcontainer p {
+	margin: 2px 0;
 }

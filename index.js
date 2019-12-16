@@ -173,7 +173,7 @@ function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
-		theta.value += 0.007;
+		theta.value += 0.005;
 		if (dt > 16) {
 			lastUpdate = timestamp;
 		  renderer.render(scene, camera);
