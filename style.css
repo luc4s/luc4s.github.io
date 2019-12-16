@@ -1,3 +1,15 @@
 body {
 	margin: 0;
 }
+.container {
+	z-index: 2;
+	width: 800px;
+	height: 200px;
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	background-color: #FFFFFF;
+	border-radius: 12px;
+	padding: 10px;
+	opacity: 0.9;
+}

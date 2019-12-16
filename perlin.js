@@ -33,37 +33,26 @@ function perlin(x, y) {
   return value;
 }
 
+
 // Perturb gradient
-function perturbGradient(tx, ty) {
+function perturbGradient() {
   for (var i = 0; i < NOISE_MAX; ++i) {
     for (var j = 0; j < NOISE_MAX; ++j) {
       var x0 = gradient[i][j][0];
       var y0 = gradient[i][j][1];
       var oldAngle = Math.atan2(y0, x0);
+      if (oldAngle < 0) {
+        oldAngle += Math.PI * 2;
+      }
 
        // Add a bit of randomness
-       var angle = oldAngle + 0.01 + Math.random() * 0.001;
+       var angle = oldAngle + 0.01;
 
        var sin = Math.sin(angle);
        var cos = Math.cos(angle);
        var x = cos;
        var y = sin;
 
-       // Move gradient toward target
-       if (tx && ty) {
-          var dx = tx - j;
-          var dy = ty - i;
-          var d = Math.sqrt(dx * dx + dy * dy);
-          if (d == 0) {
-            d = 1e-6;
-          }
-          var xx = dx / (d * d);
-          var yy = dy / (d * d);
-          x += xx * 0.02;
-          y += yy * 0.02;
-       }
-
-       var l = Math.sqrt((x * x) + (y * y));
        gradient[i][j] = [x/l, y/l];
      }
    }

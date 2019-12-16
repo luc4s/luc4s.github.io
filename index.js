@@ -1,8 +1,23 @@
+var vertexShaderCode = "\
+\
+";
 window.requestAnimationFrame = window.requestAnimationFrame
 															|| window.mozRequestAnimationFrame
 															|| window.webkitRequestAnimationFrame
 															|| window.msRequestAnimationFrame;
 
+// Renderer setup
+var renderer = new THREE.WebGLRenderer({
+	antialias: true,
+});
+renderer.setSize( window.innerWidth, window.innerHeight );
+
+if (!renderer.extensions.get('OES_texture_float')) {
+	window.alert('Unfortunately your browser does not support the technologie required by this page.');
+}
+document.body.appendChild( renderer.domElement );
+
+// Scene setup
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(
 	75,
@@ -12,13 +27,7 @@ var camera = new THREE.PerspectiveCamera(
 
 camera.position.z = 5;
 
-var renderer = new THREE.WebGLRenderer({
-	antialias: true,
-});
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
-
-
+// Scene lights
 var light = new THREE.DirectionalLight(0xFFFFFF, 0.2);
 light.position.set(-3, 3, 10);
 light.target.position.set(3, -3, -3);
@@ -29,87 +38,110 @@ light.position.set(3, -3, 10);
 light.target.position.set(-3, 3, -3);
 
 scene.add(light);
+scene.add(new THREE.AmbientLight(0x101010));
 
-var geom = new THREE.BoxGeometry(1, 1, 1);
+var size = 16;
+var noiseSize = 8;
 
-var material = new THREE.MeshStandardMaterial({
-	color: '#FFFFFF',
-	emissive: 0x444444,
-	roughness: 1,
-	metalness: 0,
-});
+// Material setup
+// Generate gradients texture for material
+var texDim = noiseSize * noiseSize;
+var data = new Float32Array(texDim * 3)
+for (var i = 0; i < texDim; ++i) {
+	var index = i * 3;
+	var rnd = Math.random() * 2 * Math.PI;
+	data[index] = Math.cos(rnd);
+	data[index + 1] = Math.sin(rnd);
+	data[index + 2] = 0;
+}
 
-var group = new THREE.Group();
+var gradientTex = new THREE.DataTexture(
+	data,
+	noiseSize,
+	noiseSize, 
+	THREE.RGBFormat,
+	THREE.FloatType,
+	THREE.UVMapping,
+	THREE.MirroredRepeatWrapping,
+	THREE.MirroredRepeatWrapping,
+	THREE.NearestFilter,
+	THREE.NearestFilter);
 
-var mesh = new THREE.Mesh(geom, material);
-mesh.position.x = -3;
-group.add(mesh);
-
-mesh = new THREE.Mesh(geom, material);
-group.add(mesh);
-
-mesh = new THREE.Mesh(geom, material);
-mesh.position.x = 3;
-group.add(mesh);
-
-group.position.y = -1;
-scene.add(group);
-
-// Generate random triangulation
 var m =  new THREE.MeshStandardMaterial({
+	aoMap: gradientTex,
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
 	roughness: 0.4,
-	metalness: 0.3,
+	metalness: 0.7,
+	defines: { NOISE_SIZE: noiseSize },
 	//wireframe: true,
 });
+/*
+m = new THREE.MeshBasicMaterial({
+	wireframe: true,
+});
+//*/
 
-var size = 16;
-var vertices = new Float32Array(size * size * 3);
+// Modify shader a bit to add perlin noise transform
+//*
+var theta = { value: 0.0 };
+m.onBeforeCompile = function(shader) {
+	shader.vertexShader =
+		shader.vertexShader
+			.replace(
+				'#include <common>',
+				'#include <common>\n' + shaderUtils)
+			.replace(
+				'#include <begin_vertex>',
+				'#include <begin_vertex>\n' + shaderVertexTransform);
+	shader.uniforms.gradientTex = { value: gradientTex };
+	shader.uniforms.theta = theta;
+};
+//*/
+
+var vertices = new Float32Array(size * size * 3 * 6);
 function generateTriangulation() {
-	var geom = new THREE.BufferGeometry();	
-	var array = [];
-	var nArray = [];
-	var s = 2;
 	var c = 0;
-	function newVx(x, y) {
-		vertices[c++] = x + (Math.random() * 0.2 - 0.1);
-		vertices[c++] = y + (Math.random() * 0.2 - 0.1);;
-		vertices[c++] = 0;
+	var cUV = 0;
+
+	var uvs = new Float32Array(size * size * 2 * 6);
+	var normals = new Float32Array(vertices.length);
+
+	function pushVertex(x, y) {
+		vertices[c] = x;	normals[c++] = 0;
+		vertices[c] = y;	normals[c++] = 0;
+		vertices[c] = 0;	normals[c++] = -1;
+		uvs[cUV++] = x / size;
+		uvs[cUV++] = y / size;
 	}
 
-	var gIndices = new Uint16Array(6 * size * size);
-	var idxCounter = 0;
 	for (var i = 0; i < size; ++i) {
 		for (var j = 0; j < size; ++j) {
-				newVx(i, j);
+				pushVertex(i, j);
+				pushVertex(i, j + 1);
+				pushVertex(i + 1, j + 1);
 
-				if ((i + 1 < size) && (j + 1 < size)) {
-					var idx = j * size + i;
-					gIndices[idxCounter++] = idx;
-					gIndices[idxCounter++] = idx + size;
-					gIndices[idxCounter++] = idx + 1 + size;
-
-					gIndices[idxCounter++] = idx + 1 + size;
-					gIndices[idxCounter++] = idx + 1;
-					gIndices[idxCounter++] = idx;
-				}
+				pushVertex(i + 1, j + 1);
+				pushVertex(i + 1, j);
+				pushVertex(i, j);
 		}
 	}
+
+	var geom = new THREE.BufferGeometry();	
 	geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	geom.setIndex(new THREE.BufferAttribute(gIndices, 1));
-	geom.computeVertexNormals();
+	geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+	geom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+	//geom.computeVertexNormals();
 	var mesh = new THREE.Mesh(geom, m);
-	mesh.scale.setScalar(2);
-	mesh.position.z = -5;
-	mesh.position.y = -(size);
-	mesh.position.x = -(size);
+	mesh.position.z = -10;
+	mesh.position.y = -size / 2;
+	mesh.position.x = -size / 2;
 	return mesh;
 }
 
-var back = generateTriangulation();
-scene.add(back);
+var shape = generateTriangulation();
+scene.add(shape);
 
 function applyNoiseToGeometry() {
 	var length = size;
@@ -117,31 +149,41 @@ function applyNoiseToGeometry() {
 		var vIdx = Math.floor(i / 3);
 		var x = Math.floor(vIdx / length) % length;
 		var y = (vIdx - x * length) % length;
-		vertices[i] = perlin(x / 2, y / 2) - 0.5;
+		vertices[i] = perlin(x / 2, y / 2);
 	}
-	back.geometry.getAttribute('position').needsUpdate = true;
-	back.geometry.computeVertexNormals();
+	shape.geometry.getAttribute('position').needsUpdate = true;
+	shape.geometry.computeVertexNormals();
 }
-applyNoiseToGeometry();
-
-var mouse = {
-	x: 0,
-	y: 0,
-};
-document.addEventListener('mousemove', function (event) {
-	mouse.x = size * (event.clientX / window.innerWidth);
-	mouse.y = size - (size * (event.clientY / window.innerHeight));
-	console.log(mouse);
-});
 
 function tick(timestamp) {
-  renderer.render(scene, camera);
-  perturbGradient(mouse.x / 2, mouse.y / 2);
-  applyNoiseToGeometry();
-  //window.setTimeout(requestAnimationFrame, 13, tick);
-  //back.rotation.x += 0.01;
-  //back.rotation.y += 0.02;
   window.requestAnimationFrame(tick);
+	if (!this.lastUpdate) {
+		this.lastUpdate = 0;
+	}
+	var dt = timestamp - this.lastUpdate
+	if (dt < 33) {
+		return;
+	}
+	this.lastUpdate = timestamp;
+	theta.value += 0.01;
+  //perturbGradient();
+  //applyNoiseToGeometry();
+  renderer.render(scene, camera);
 }
-renderer.render(scene, camera);
+
+function updatePlane() {
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	
+	var unprojected = new THREE.Vector4(0, 1, 0, 1).applyMatrix4(camera.projectionMatrix);
+	console.log(unprojected);
+}
+
+window.addEventListener( 'resize', function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  updatePlane();
+}, false );
+
 tick();
