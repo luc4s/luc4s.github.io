@@ -157,7 +157,7 @@ window.addEventListener('resize', function() {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
-  updatePlane(width, height);
+  updatePlane();
 }, false );
 
 var mouseCoords = null;
@@ -173,9 +173,9 @@ function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
-		theta.value += 0.005;
 		if (dt > 16) {
 			lastUpdate = timestamp;
+			theta.value += 0.002 * dt / 16;
 		  renderer.render(scene, camera);
 		}
 	  window.requestAnimationFrame(loop);
@@ -196,5 +196,5 @@ function updatePlane() {
 	shape.position.x = (-size / 2) * scale;
 }
 
-updatePlane();
 tick();
+updatePlane();
