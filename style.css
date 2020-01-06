@@ -13,12 +13,13 @@ canvas {
 	width: 100%;
 }
 .subcontainer {
-	background-color: #DDDDDD;
-	opacity: 0.9;
+	background-color: #FFFFFF;
+	opacity: 0.95;
 	padding: 24px;
 	max-width: 800px;
 	margin: auto;
-	margin-top: 32px;
+	margin-top: 24px;
+	margin-bottom: 24px;
 }
 .subcontainer.header h1 {
 	font-size: 3em;
@@ -27,8 +28,23 @@ canvas {
 .subcontainer h1 {
 	margin: 5px 0;
 	font-size: 2em;
+	border-bottom: 1px solid black;
 }
 .subcontainer p {
 	margin: 2px 0;
 	font-size: 1em;
+}
+.subcontainer .content {
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+
+}
+.subcontainer .content p {
+	flex: 1;
+	display: block;
+}
+.subcontainer .content img.picture {
+	width: 300px;
 }

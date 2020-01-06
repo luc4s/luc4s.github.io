@@ -28,18 +28,17 @@ var camera = new THREE.PerspectiveCamera(
 camera.position.z = 5;
 
 // Scene lights
-var lightIntensity = 0.4;
+var lightIntensity = 0.8;
 var f = 0.8;
 var light = new THREE.DirectionalLight(0xFFFFFF, lightIntensity);
 light.position.set(f, -f, f);
 scene.add(light);
-light = new THREE.DirectionalLight(0xBD48FF, lightIntensity);
+//light = new THREE.DirectionalLight(0xBD48FF, lightIntensity);
+light = new THREE.DirectionalLight(0xDDDDFF, lightIntensity);
 light.position.set(-f, f, f);
 scene.add(light);
 
-//scene.add(new THREE.AmbientLight(0x666666));
-
-var size = 32;
+var size = 16;
 var noiseSize = 64;
 
 // Material setup
@@ -169,15 +168,42 @@ window.addEventListener('mousemove', function(e) {
 	mouseCoords.y = (1.0 - event.clientY / window.innerHeight) * size;
 });
 
+var m = 1;
+var lastPos = undefined;
+var lastT = 0;
+
+function addMomentum(x, y, t) {
+	if (!lastPos) {
+		lastPos = { "x": x, "y": y };
+		lastT = t;
+		return;
+	}
+	var dx = lastPos.x - x;
+	var dy = lastPos.y - y;
+	var dt = t - lastT;
+	var d = Math.sqrt(dx * dx + dy * dy);
+	m = Math.min(5000, m + d * dt);
+	lastPos = { "x": x, "y": y };
+	lastT = t;
+}
+
+function handleMoveEvent(event) {
+	addMomentum(event.pageX, event.pageY, event.timeStamp);
+}
+
+window.onmousemove = handleMoveEvent;
+window.ontouchmove = handleMoveEvent;
+
 function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.002 * dt / 16;
+			theta.value += 0.001 * Math.max(2, m / 300);
 		  renderer.render(scene, camera);
 		}
+		m *= 0.97;
 	  window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);
@@ -197,4 +223,8 @@ function updatePlane() {
 }
 
 tick();
-updatePlane();
+
+
+window.onload = function() {
+	updatePlane();
+};
