@@ -28,18 +28,26 @@ var camera = new THREE.PerspectiveCamera(
 camera.position.z = 5;
 
 // Scene lights
-var lightIntensity = 0.8;
+var lightIntensity = 0.2;
 var f = 0.8;
 var light = new THREE.DirectionalLight(0xFFFFFF, lightIntensity);
-light.position.set(f, -f, f);
+light.position.set(-f, -f, f);
 scene.add(light);
 //light = new THREE.DirectionalLight(0xBD48FF, lightIntensity);
+light = new THREE.DirectionalLight(0xDDDDFF, lightIntensity);
+light.position.set(f, f, f);
+scene.add(light);
+
 light = new THREE.DirectionalLight(0xDDDDFF, lightIntensity);
 light.position.set(-f, f, f);
 scene.add(light);
 
+light = new THREE.DirectionalLight(0xDDDDFF, lightIntensity);
+light.position.set(f, -f, f);
+scene.add(light);
+
 var size = 16;
-var noiseSize = 64;
+var noiseSize = 32;
 
 // Material setup
 // Generate gradients texture for material
@@ -97,7 +105,7 @@ m.onBeforeCompile = function(shader) {
 		shader.vertexShader
 			.replace(
 				'#include <common>',
-				'#include <common>\n' + document.getElementById('fragShader').textContent)
+				'#include <common>\n' + document.getElementById('shaderUtils').textContent)
 			.replace(
 				'#include <begin_vertex>',
 				'#include <begin_vertex>\n' + document.getElementById('vertShader').textContent);

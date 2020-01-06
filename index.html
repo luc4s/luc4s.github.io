@@ -6,7 +6,7 @@
 		<link rel="shortcut icon" type="image/png" href="./favicon.png"/>
 	</head>
 	<body>
-		<script id="fragShader" type="x-shader/x-fragment">
+		<script id="shaderUtils" type="x-shader/x-vertex">
 			attribute vec2 rAxis;
 
 			uniform sampler2D gradientTex;
@@ -44,7 +44,7 @@
 			}
 		</script>
 		<script id="vertShader" type="x-shader/x-vertex">
-			transformed.z = (perlin(uv) - 0.5) * 10.0;
+			transformed.z = (perlin(uv) - 0.5) * 4.0;
 		</script>
 		<script src="./three.min.js"></script>
 		<script src="./index.js"></script>
@@ -56,7 +56,8 @@
 				<h1>CAD SaaS</h1>
 				<div class="content">
 					<img class="picture" src="./placeholder.png" />
-					<p>Based on <a href="https://mirrakoi.com">Mirrakoi's</a> CAD product. <br>Implemented using React, ThreeJS and WebAssembly.</p>
+					<p>CAD for everyone, based on <a href="https://mirrakoi.com">Mirrakoi's</a> CAD product.<br>
+					Implemented using React, ThreeJS and WebAssembly.</p>
 				</div>
 			</div>
 			<div class="subcontainer">
