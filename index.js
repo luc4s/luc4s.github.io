@@ -88,11 +88,10 @@ var accTex = new THREE.DataTexture(
 	THREE.NearestFilter);
 
 var m =  new THREE.MeshStandardMaterial({
-	aoMap: gradientTex,
 	color: 0xFFFFFF,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.3,
+	roughness: 0.4,
 	metalness: 1,
 	defines: { NOISE_SIZE: noiseSize },
 });
@@ -100,7 +99,7 @@ var m =  new THREE.MeshStandardMaterial({
 // Modify shader to add perlin noise transform
 //*
 var theta = { value: 0.0 };
-m.onBeforeCompile = function(shader) {
+function beforeCompileShader (shader) {
 	shader.vertexShader =
 		shader.vertexShader
 			.replace(
@@ -113,6 +112,7 @@ m.onBeforeCompile = function(shader) {
 	shader.uniforms.accTex = { value: accTex };
 	shader.uniforms.theta = theta;
 };
+m.onBeforeCompile = beforeCompileShader;
 //*/
 
 function generateTriangulation() {
@@ -158,6 +158,17 @@ function generateTriangulation() {
 var shape = generateTriangulation();
 scene.add(shape);
 
+var wfMaterial = new THREE.MeshBasicMaterial({
+	color: 0xFFFFFF,
+	flatShading: true,
+	defines: { NOISE_SIZE: noiseSize },
+	wireframe: true,
+});
+wfMaterial.onBeforeCompile = beforeCompileShader;
+var wfShape = new THREE.Mesh(shape.geometry, wfMaterial);
+wfShape.position.copy(shape.position);
+scene.add(wfShape);
+
 window.addEventListener('resize', function() {
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -190,7 +201,7 @@ function addMomentum(x, y, t) {
 	var dy = lastPos.y - y;
 	var dt = t - lastT;
 	var d = Math.sqrt(dx * dx + dy * dy);
-	m = Math.min(5000, m + d * dt);
+	m = Math.min(1e6, m + d * dt * 0.5);
 	lastPos = { "x": x, "y": y };
 	lastT = t;
 }
@@ -208,10 +219,10 @@ function tick() {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.001 * Math.max(2, m / 300);
+			theta.value += 0.002 * Math.min(5, Math.max(1, m / 500));
 		  renderer.render(scene, camera);
 		}
-		m *= 0.97;
+		m *= 0.995;
 	  window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);

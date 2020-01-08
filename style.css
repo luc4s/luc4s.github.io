@@ -49,5 +49,6 @@ canvas {
 	display: block;
 }
 .subcontainer .content img.picture {
-	width: 300px;
+	width: 500px;
+	margin: 10px;
 }
