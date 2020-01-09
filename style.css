@@ -8,13 +8,13 @@ canvas {
 	left: 0;
 }
 .container {
-	z-index: 2;
+	position: relative;
+	z-index: 1;
 	margin: auto;
 	width: 100%;
 }
 .subcontainer {
 	background-color: #FFFFFF;
-	opacity: 0.95;
 	padding: 0;
 	max-width: 800px;
 	margin: auto;
@@ -34,7 +34,8 @@ canvas {
 	box-sizing: content-box;
 }
 .subcontainer p {
-	margin: 2px 0;
+	margin: 8px 0;
+	margin-top: 6px;
 	font-size: 1em;
 }
 .subcontainer .content {
