@@ -188,7 +188,7 @@ window.addEventListener('mousemove', function(e) {
 	mouseCoords.y = (1.0 - event.clientY / window.innerHeight) * size;
 });
 
-var m = 1;
+var m = 0;
 var lastPos = { x: 0, y: 0 };
 var lastT = 0;
 
@@ -202,7 +202,7 @@ function addMomentum(x, y, t) {
 	var dy = lastPos.y - y;
 	var dt = t - lastT;
 	var d = Math.sqrt(dx * dx + dy * dy);
-	m = Math.max(5, Math.min(1e5, m + d * dt * 0.5));
+	m = Math.max(2, Math.min(1e5, m + d * dt));
 	lastPos = { "x": x, "y": y };
 	lastT = t;
 }
@@ -214,7 +214,7 @@ function handleMoveEvent(event) {
 window.onmousemove = handleMoveEvent;
 window.ontouchmove = handleMoveEvent;
 window.onscroll = function() {
-	m = Math.max(5, m + 1e7);
+	m = Math.max(2, m + 1e8);
 };
 function tick() {
 	var lastUpdate = 0;
@@ -225,7 +225,7 @@ function tick() {
 			theta.value += 0.002 * Math.min(7, m / 500);
 		  renderer.render(scene, camera);
 		}
-		m *= 0.95;
+		m *= 0.9;
 	  window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);
