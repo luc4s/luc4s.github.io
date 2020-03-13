@@ -203,7 +203,7 @@ function addMomentum(x, y, t) {
 	var dy = lastPos.y - y;
 	var dt = t - lastT;
 	var d = Math.sqrt(dx * dx + dy * dy);
-	momentum = Math.max(100, Math.min(1, momentum + d * dt));
+	momentum = Math.max(1, Math.min(1, momentum + d * dt)) * 1e3;
 	lastPos = { "x": x, "y": y };
 	lastT = t;
 }
@@ -212,11 +212,18 @@ function handleMoveEvent(event) {
 	addMomentum(event.pageX, event.pageY, event.timeStamp);
 }
 
+function handleMouseWheel(event) {
+	console.log(event.deltaY);
+	addMomentum(
+		lastPos.x + event.deltaX,
+		lastPos.y + event.deltaY,
+		event.timeStamp);
+};
+
 window.onmousemove = handleMoveEvent;
 window.ontouchmove = handleMoveEvent;
-window.onscroll = function() {
-	momentum = Math.max(1, momentum * 1.5);
-};
+window.onwheel = handleMouseWheel;
+
 
 function tick() {
 	var lastUpdate = 0;
@@ -224,10 +231,10 @@ function tick() {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.002 * Math.min(7, momentum / 500);
+			theta.value += 0.002 * Math.min(7, momentum / 100);
 		  renderer.render(scene, camera);
 		}
-		momentum *= 0.9;
+		momentum *= 0.99;
 	  window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);
