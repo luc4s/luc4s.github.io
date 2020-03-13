@@ -88,15 +88,15 @@ var accTex = new THREE.DataTexture(
 	THREE.NearestFilter);
 
 var m =  new THREE.MeshStandardMaterial({
-	color: 0xFFFFFF,
+	color: 0x666666,
 	side: THREE.DoubleSide,
 	flatShading: true,
-	roughness: 0.4,
-	metalness: 1,
+	roughness: 0.5,
+	metalness: 0.2,
 	defines: { NOISE_SIZE: noiseSize },
 });
 var wfMaterial = new THREE.MeshBasicMaterial({
-	color: 0xFFFFFF,
+	color: 0x222222,
 	flatShading: true,
 	wireframe: true,
 	depthTest: false,
