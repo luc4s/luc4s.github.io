@@ -51,6 +51,7 @@ a {
 	align-items: flex-start;
 	justify-content: center;
 	display: flex;
+	position: relative;
 }
 .subcontainer .content p {
 	flex: 1;
@@ -59,6 +60,7 @@ a {
 .subcontainer .content img.picture {
 	margin: 16px;
 	box-shadow: 6px 7px 13px 0px grey;
+	max-width: 50%;
 }
 .subcontainer .repoLink {
 	position: absolute;
