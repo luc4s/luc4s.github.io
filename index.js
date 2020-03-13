@@ -87,7 +87,7 @@ var accTex = new THREE.DataTexture(
 	THREE.NearestFilter,
 	THREE.NearestFilter);
 
-var m =  new THREE.MeshStandardMaterial({
+var material =  new THREE.MeshStandardMaterial({
 	color: 0x666666,
 	side: THREE.DoubleSide,
 	flatShading: true,
@@ -102,7 +102,6 @@ var wfMaterial = new THREE.MeshBasicMaterial({
 	depthTest: false,
 });
 wfMaterial.defines = { NOISE_SIZE: noiseSize };
-wfMaterial.onBeforeCompile = beforeCompileShader;
 
 // Modify shader to add perlin noise transform
 //*
@@ -120,7 +119,9 @@ function beforeCompileShader (shader) {
 	shader.uniforms.accTex = { value: accTex };
 	shader.uniforms.theta = theta;
 };
-m.onBeforeCompile = beforeCompileShader;
+
+wfMaterial.onBeforeCompile = beforeCompileShader;
+material.onBeforeCompile = beforeCompileShader;
 //*/
 
 function generateTriangulation() {
@@ -156,7 +157,7 @@ function generateTriangulation() {
 	geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 	geom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-	var mesh = new THREE.Mesh(geom, m);
+	var mesh = new THREE.Mesh(geom, material);
 	mesh.position.z = 0;
 	mesh.position.y = -size / 2;
 	mesh.position.x = -size / 2;
@@ -173,10 +174,10 @@ scene.add(wfShape);
 window.addEventListener('resize', function() {
 	var width = window.innerWidth;
 	var height = window.innerHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-  updatePlane();
+  	camera.aspect = width / height;
+  	camera.updateProjectionMatrix();
+  	renderer.setSize(width, height);
+  	updatePlane();
 }, false );
 
 var mouseCoords = null;
@@ -188,7 +189,7 @@ window.addEventListener('mousemove', function(e) {
 	mouseCoords.y = (1.0 - event.clientY / window.innerHeight) * size;
 });
 
-var m = 0;
+var momentum = 0;
 var lastPos = { x: 0, y: 0 };
 var lastT = 0;
 
@@ -202,7 +203,7 @@ function addMomentum(x, y, t) {
 	var dy = lastPos.y - y;
 	var dt = t - lastT;
 	var d = Math.sqrt(dx * dx + dy * dy);
-	m = Math.max(2, Math.min(1e5, m + d * dt));
+	momentum = Math.max(2, Math.min(2e5, momentum + d * dt));
 	lastPos = { "x": x, "y": y };
 	lastT = t;
 }
@@ -214,18 +215,19 @@ function handleMoveEvent(event) {
 window.onmousemove = handleMoveEvent;
 window.ontouchmove = handleMoveEvent;
 window.onscroll = function() {
-	m = Math.max(2, m + 1e8);
+	momentum = Math.max(1, momentum * 1.5);
 };
+
 function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
 		var dt = timestamp - lastUpdate;
 		if (dt > 16) {
 			lastUpdate = timestamp;
-			theta.value += 0.002 * Math.min(7, m / 500);
+			theta.value += 0.002 * Math.min(7, momentum / 500);
 		  renderer.render(scene, camera);
 		}
-		m *= 0.9;
+		momentum *= 0.9;
 	  window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);
