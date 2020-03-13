@@ -203,7 +203,7 @@ function addMomentum(x, y, t) {
 	var dy = lastPos.y - y;
 	var dt = t - lastT;
 	var d = Math.sqrt(dx * dx + dy * dy);
-	momentum = Math.max(2, Math.min(2e5, momentum + d * dt));
+	momentum = Math.max(100, Math.min(1, momentum + d * dt));
 	lastPos = { "x": x, "y": y };
 	lastT = t;
 }

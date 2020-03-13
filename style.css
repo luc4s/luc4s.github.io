@@ -7,6 +7,11 @@ canvas {
 	top: 0;
 	left: 0;
 }
+a {
+	font-weight: bold;
+	color: #AA1111;
+	text-decoration: none;
+}
 .container {
 	position: relative;
 	z-index: 1;
@@ -21,7 +26,8 @@ canvas {
 	margin-top: 24px;
 	margin-bottom: 24px;
 	border: 1px solid black;
-	box-shadow: 8px 8px 8px black
+	box-shadow: 8px 8px 8px black;
+	position: relative;
 }
 .subcontainer.header h1 {
 	font-size: 3em;
@@ -51,7 +57,13 @@ canvas {
 	display: block;
 }
 .subcontainer .content img.picture {
-	width: 400px;
 	margin: 16px;
 	box-shadow: 6px 7px 13px 0px grey;
+}
+.subcontainer .repoLink {
+	position: absolute;
+	display: block;
+	bottom: 8px;
+	right: 8px;
+	width: 40px;
 }
