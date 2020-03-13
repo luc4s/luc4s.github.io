@@ -213,7 +213,6 @@ function handleMoveEvent(event) {
 }
 
 function handleMouseWheel(event) {
-	console.log(event.deltaY);
 	addMomentum(
 		lastPos.x + event.deltaX,
 		lastPos.y + event.deltaY,
@@ -228,14 +227,16 @@ window.onwheel = handleMouseWheel;
 function tick() {
 	var lastUpdate = 0;
 	function loop(timestamp) {
-		var dt = timestamp - lastUpdate;
-		if (dt > 16) {
-			lastUpdate = timestamp;
-			theta.value += 0.002 * Math.min(7, momentum / 100);
-		  renderer.render(scene, camera);
+		if (momentum > 100) {
+			var dt = timestamp - lastUpdate;
+			if (dt > 16) {
+				lastUpdate = timestamp;
+				theta.value += 0.002 * Math.min(7, momentum / 100);
+			  renderer.render(scene, camera);
+			}
+			momentum *= 0.99;
 		}
-		momentum *= 0.99;
-	  window.requestAnimationFrame(loop);
+  		window.requestAnimationFrame(loop);
 	}
 	loop(Math.Infinity);
 }

@@ -48,7 +48,7 @@ a {
 }
 .subcontainer .content {
 	flex-direction: row;
-	align-items: flex-start;
+	align-items: stretch;
 	justify-content: center;
 	display: flex;
 	position: relative;
