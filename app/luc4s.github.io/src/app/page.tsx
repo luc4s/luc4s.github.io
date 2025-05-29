@@ -1,13 +1,12 @@
 import Post from "./components/post";
+import Background from "./components/background";
 
 export default function Home() {
   return (
     <div className="container">
       <Post>
-        <h1 className="title">
-          <div>LUCAS MONNIN</div>
-        </h1>
-        <p>Some of my realizations</p>
+        <h1 className="title">LUCAS MONNIN</h1>
+        <p>Some of my realizations...</p>
       </Post>
       <Post>
         <h1>KIND OF DEEP WATERS</h1>
@@ -57,6 +56,7 @@ export default function Home() {
           looking but works well.
         </p>
       </Post>
+      <Background />
     </div>
   );
 }
