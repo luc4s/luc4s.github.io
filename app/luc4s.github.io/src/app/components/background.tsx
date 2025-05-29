@@ -3,19 +3,24 @@
 import * as THREE from "three";
 import React, { useEffect, useRef } from "react";
 
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+
 function fillScene(scene: THREE.Scene) {
   {
     // Create a circle to represent the sun
     const geometry = new THREE.CircleGeometry(1.0, 64);
     const material = new THREE.MeshBasicMaterial({
-      color: 0xfbc000, // Light salmon color, similar to sunset
+      color: 0xfbc000,
       depthTest: false,
       depthWrite: false,
     });
     const circle = new THREE.Mesh(geometry, material);
-    var size = 1;
-    circle.scale.set(size, size, size); // Scale down the sun
-    circle.position.set(0, 0.5, -1); // Position the sun above the plane
+    var size = 64;
+    circle.scale.set(size, size, size);
+    circle.position.set(0, 16, -100); // Position the sun above groung
     scene.add(circle);
   }
 
@@ -28,26 +33,31 @@ function fillScene(scene: THREE.Scene) {
       roughness: 0.1,
     });
 
-    var planeY = -2; // Position the plane slightly below the camera
+    var planeY = 0;
+    var planeSize = 256;
 
     const plane = new THREE.Mesh(geometry, material);
-    plane.scale.set(100, 100, 1); // Scale the plane to cover the background
-    plane.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
-    plane.position.set(0, planeY, 0); // Position the plane below the camera
+    plane.scale.set(planeSize, planeSize, 1);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(0, planeY, 0);
     scene.add(plane);
 
     // Generate plane grid
-    var gridColor = 0x00aeff; // Cyan color for the grid
-    const gridHelper = new THREE.GridHelper(100, 20, gridColor, gridColor);
-    gridHelper.position.set(0, planeY, 0); // Position the grid on the plane
-    // gridHelper.rotation.x = -Math.PI / 2; // Rotate the grid to match the plane
+    var gridColor = 0xff00ff;
+    const gridHelper = new THREE.GridHelper(
+      planeSize,
+      40,
+      gridColor,
+      gridColor
+    );
+    gridHelper.position.set(0, planeY, 0);
     scene.add(gridHelper);
   }
 
   {
     // Hemisphere light
     const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-    light.position.set(0, 1, 0); // Position the light above the scene
+    light.position.set(0, 1, 0);
     scene.add(light);
   }
 }
@@ -61,23 +71,43 @@ export default function Background() {
     // Scene setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      75,
+      90,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
     camera.position.z = 1;
+    camera.position.y = 5;
 
     fillScene(scene);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-
+    const renderer = new THREE.WebGLRenderer({ antialias: false });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
 
+    const renderScene = new RenderPass(scene, camera);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.5,
+      0.4,
+      0.85
+    );
+    bloomPass.threshold = 0;
+    bloomPass.strength = 0.5;
+    bloomPass.radius = 0.1;
+
+    const outputPass = new OutputPass();
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+    composer.addPass(outputPass);
+
     // Animation loop
     renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
+      composer.render();
     });
 
     // Handle window resize
@@ -85,6 +115,7 @@ export default function Background() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", handleResize);
 
