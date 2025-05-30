@@ -7,20 +7,73 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { Sky } from "three/addons/objects/Sky.js";
 
 function fillScene(scene: THREE.Scene) {
   {
+    // Skybox
+    const sky = new Sky();
+    sky.scale.setScalar(450000);
+
+    const phi = THREE.MathUtils.degToRad(92);
+    const theta = THREE.MathUtils.degToRad(180);
+    const sunPosition = new THREE.Vector3().setFromSphericalCoords(
+      1,
+      phi,
+      theta
+    );
+
+    sky.material.uniforms.sunPosition.value = sunPosition;
+    sky.material.uniforms.rayleigh.value = 3;
+    sky.material.uniforms.mieCoefficient.value = 0.0;
+    sky.material.uniforms.mieDirectionalG.value = 0;
+    sky.material.uniforms.turbidity.value = 1;
+    sky.renderOrder = -2;
+
+    scene.add(sky);
+  }
+
+  {
+    var size = 64;
+    var zPos = -100;
+
+    // Add black bands on top to create glitch effect
+    const band = new THREE.PlaneGeometry(2 * size, 2);
+    const bandMaterial = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      depthTest: true,
+      depthWrite: true,
+      colorWrite: false,
+    });
+
+    var count = 12;
+    var space = 6;
+    var spaceGrowth = -0.1;
+    var offsetY = 48;
+    for (let i = 0; i < count; i++) {
+      const bandMesh = new THREE.Mesh(band, bandMaterial);
+      bandMesh.position.set(
+        0,
+        offsetY - i * (space + i * spaceGrowth),
+        zPos + 1
+      );
+      bandMesh.renderOrder = -2;
+      scene.add(bandMesh);
+    }
+
     // Create a circle to represent the sun
     const geometry = new THREE.CircleGeometry(1.0, 64);
     const material = new THREE.MeshBasicMaterial({
       color: 0xfbc000,
-      depthTest: false,
       depthWrite: false,
+      depthTest: true,
+      depthFunc: THREE.LessDepth,
     });
     const circle = new THREE.Mesh(geometry, material);
-    var size = 64;
-    circle.scale.set(size, size, size);
-    circle.position.set(0, 16, -100); // Position the sun above groung
+    circle.scale.setScalar(size);
+    circle.position.set(0, 32, zPos - 1); // Position the sun above groung
+    circle.renderOrder = -1;
+
     scene.add(circle);
   }
 
@@ -44,14 +97,38 @@ function fillScene(scene: THREE.Scene) {
 
     // Generate plane grid
     var gridColor = 0xff00ff;
-    const gridHelper = new THREE.GridHelper(
-      planeSize,
-      40,
-      gridColor,
-      gridColor
+    var gridStep = 4;
+
+    // Create lines going in the X direction
+    const gridGeometryX = new THREE.BufferGeometry();
+    const positionsX = [];
+    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
+      positionsX.push(i, planeY, -planeSize / 2); // Start point
+      positionsX.push(i, planeY, planeSize / 2); // End point
+    }
+    gridGeometryX.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positionsX, 3)
     );
-    gridHelper.position.set(0, planeY, 0);
-    scene.add(gridHelper);
+    const lineMatPrams = { color: gridColor, depthTest: false };
+    const gridMaterialX = new THREE.LineBasicMaterial(lineMatPrams);
+    const gridLinesX = new THREE.LineSegments(gridGeometryX, gridMaterialX);
+    scene.add(gridLinesX);
+
+    // Create lines going in the Z direction
+    const gridGeometryZ = new THREE.BufferGeometry();
+    const positionsZ = [];
+    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
+      positionsZ.push(-planeSize / 2, planeY, i); // Start point
+      positionsZ.push(planeSize / 2, planeY, i); // End point
+    }
+    gridGeometryZ.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positionsZ, 3)
+    );
+    const gridMaterialZ = new THREE.LineBasicMaterial(lineMatPrams);
+    const gridLinesZ = new THREE.LineSegments(gridGeometryZ, gridMaterialZ);
+    scene.add(gridLinesZ);
   }
 
   {
@@ -76,8 +153,8 @@ export default function Background() {
       0.1,
       1000
     );
-    camera.position.z = 1;
     camera.position.y = 5;
+    camera.position.z = 1;
 
     fillScene(scene);
 
@@ -96,7 +173,7 @@ export default function Background() {
     );
     bloomPass.threshold = 0;
     bloomPass.strength = 0.5;
-    bloomPass.radius = 0.1;
+    bloomPass.radius = 0.2;
 
     const outputPass = new OutputPass();
 

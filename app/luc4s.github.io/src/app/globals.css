@@ -2,7 +2,7 @@
 
 :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #ffffff;
 }
 
 @theme inline {
@@ -24,16 +24,31 @@ body {
   align-items: left;
   min-height: 100vh;
   padding: 20px;
-  gap: 2em;
+  gap: 32px;
 }
 
 .post-block {
-  width: 42em;
   padding: 20px;
-  margin: 5px;
+  margin: 0;
   background: var(--color-background);
 
   border: 1px solid var(--color-foreground);
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.post-block img {
+  border: 1px solid #00d4ff;
+  margin: 8px;
+  width: 90%;
+  max-height: 400px;
+  object-fit: contain;
+}
+.post-block p {
+  margin: 0;
+  width: 100%;
 }
 
 .post-block h1 {
@@ -41,7 +56,19 @@ body {
   margin-bottom: 20px;
   text-transform: uppercase;
   text-align: left;
-  border-bottom: 1px solid var(--color-foreground);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.363);
+
+  background: linear-gradient(
+    90deg,
+    #00d4ff,
+    #ff00de
+  );
+  font-weight: 800;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-style: italic;
 }
 
 @keyframes textShadowRotate {
@@ -68,7 +95,7 @@ body {
 }
 
 .post-block h1.title {
-  font-size: 3em;
+  font-size: 4em;
   text-align: right;
   margin-bottom: 20px;
   letter-spacing: 2px;
@@ -77,6 +104,7 @@ body {
   font-weight: 900;
   font-style: italic;
   font-family: sans-serif;
+  border: none;
 
   background: linear-gradient(
     90deg,
