@@ -79,7 +79,7 @@ export default function Home() {
             <h3>Credits</h3>
             <p>
               <Link href="https://skfb.ly/6Zp6q" target="_blank">
-                "Low Poly PS1-Syle Testarossa" by Namahoi
+                &quot;Low Poly PS1-Syle Testarossa&quot; by Namahoi
               </Link>
               &nbsp;is licensed under&nbsp;
               <Link

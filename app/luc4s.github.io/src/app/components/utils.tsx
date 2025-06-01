@@ -1,10 +1,10 @@
-import * as Noise from "noisejs";
+import Noise from "noisejs";
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-function loadCar(scene: THREE.Scene) {
+function loadCar() {
   const loader = new GLTFLoader();
-  const promise = new Promise<THREE.Object3D>((resolve, reject) => {
+  const promise = new Promise<GLTF>((resolve, reject) => {
     loader.load(
       "models/testarossa.glb",
       (gltf) => {
@@ -42,7 +42,7 @@ function createGridTexture(size: number, color: number): THREE.Texture {
   // Dirty hack to get max anisotropy
   const renderer = new THREE.WebGLRenderer({ antialias: false });
 
-  const texture = new THREE.DataTexture(data, sideLength, sideLength, 1);
+  const texture = new THREE.DataTexture(data, sideLength, sideLength);
   texture.type = THREE.UnsignedByteType;
   texture.format = THREE.RGBAFormat;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -133,7 +133,6 @@ function generateSceneBackground(
           if (radiusSq > 1) continue;
 
           if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-            const nIndex = (ny * width + nx) * 4;
             makeStar(nx, ny);
           }
         }
@@ -157,6 +156,7 @@ function generateSceneBackground(
   return texture;
 }
 function generateMountains() {
+  //@ts-expect-error: Noise exported weirdly
   const noise = new Noise.Noise(Math.random());
 
   const size = 256;
@@ -207,7 +207,7 @@ function generateMountains() {
   // Add wireframe
   const wireframe = new THREE.WireframeGeometry(mountainGeometry);
   const lines = new THREE.LineSegments(wireframe);
-  lines.material.color.set(0x2574fc);
+  (lines.material as THREE.LineBasicMaterial).color.set(0x2574fc);
 
   const group = new THREE.Group();
   group.add(mountainMesh);
@@ -228,19 +228,18 @@ export function fillBackground(scene: THREE.Scene, aspectRatio: number) {
 
 export function fillScene(scene: THREE.Scene) {
   const data = {
-    gridTex: null,
-    carMixer: null,
-    carObject: null,
+    gridTex: null as THREE.Texture | null,
+    carMixer: null as THREE.AnimationMixer | null,
+    carObject: null as THREE.Object3D | null,
   };
-
-  let promiseResolve: (data: any) => void;
+  let promiseResolve: (_data: typeof data) => void;
   const promise = new Promise<typeof data>((resolve) => {
     promiseResolve = resolve;
   });
 
   {
-    var sunSize = 56;
-    var zPos = -100;
+    const sunSize = 56;
+    const zPos = -100;
 
     // Add bands on top to create glitch effect
     const band = new THREE.PlaneGeometry(2 * sunSize, 2);
@@ -251,10 +250,10 @@ export function fillScene(scene: THREE.Scene) {
       colorWrite: false,
     });
 
-    var count = 12;
-    var space = 6;
-    var spaceGrowth = -0.1;
-    var offsetY = 45;
+    const count = 12;
+    const space = 6;
+    const spaceGrowth = -0.1;
+    const offsetY = 45;
     for (let i = 0; i < count; i++) {
       const bandMesh = new THREE.Mesh(band, bandMaterial);
       bandMesh.position.set(
@@ -288,8 +287,8 @@ export function fillScene(scene: THREE.Scene) {
   }
 
   {
-    var planeY = 0;
-    var planeSize = 256;
+    const planeY = 0;
+    const planeSize = 256;
 
     // Generate plane grid
     const gridTexture = createGridTexture(256, 0xff00ffff);
@@ -321,7 +320,7 @@ export function fillScene(scene: THREE.Scene) {
   }
 
   {
-    loadCar(scene)
+    loadCar()
       .then((gltf) => {
         const carObject = gltf.scene;
         carObject.scale.setScalar(1.5);
