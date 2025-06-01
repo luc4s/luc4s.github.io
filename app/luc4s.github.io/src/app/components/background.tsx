@@ -29,12 +29,16 @@ function createGridTexture(size: number, color: number): THREE.Texture {
       }
     }
   }
+
+  // Dirty hack to get max anisotropy
+  const renderer = new THREE.WebGLRenderer({ antialias: false });
+
   const texture = new THREE.DataTexture(data, sideLength, sideLength, 1);
   texture.type = THREE.UnsignedByteType;
   texture.format = THREE.RGBAFormat;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.anisotropy = 8; // TODO Get that value from renderer
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.generateMipmaps = true;
@@ -44,6 +48,9 @@ function createGridTexture(size: number, color: number): THREE.Texture {
   return texture;
 }
 function fillScene(scene: THREE.Scene) {
+  const data = {
+    gridTex: null,
+  };
   {
     // Skybox
     const sky = new Sky();
@@ -128,7 +135,11 @@ function fillScene(scene: THREE.Scene) {
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(0, planeY, 0);
     scene.add(plane);
+
+    data["gridTex"] = gridTexture;
   }
+
+  return data;
 }
 
 export default function Background() {
@@ -148,7 +159,7 @@ export default function Background() {
     camera.position.y = 5;
     camera.position.z = 1;
 
-    fillScene(scene);
+    const sceneData = fillScene(scene);
 
     const renderer = new THREE.WebGLRenderer({ antialias: false });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -174,17 +185,15 @@ export default function Background() {
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
 
-    const lines = scene.getObjectByName("lines") as THREE.Group;
-    const animate = () => {
-      if (lines) {
-        lines.children.forEach((line) => {
-          line.position.z += 0.05;
-          if (line.position.z > 0) {
-            line.position.z = -100;
-          }
-        });
-      }
-    };
+    const gridTex = sceneData.gridTex as THREE.Texture | null;
+    let animate = () => {};
+    if (gridTex) {
+      animate = () => {
+        // gridTex.offset.x += 0.005;
+        gridTex.offset.y += 0.005;
+        gridTex.needsUpdate = true;
+      };
+    }
 
     // Animation loop
     renderer.setAnimationLoop(() => {
