@@ -7,7 +7,6 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { Sky } from "three/addons/objects/Sky.js";
 
 function createGridTexture(size: number, color: number): THREE.Texture {
   // For tiling, size must be a power of 2
@@ -47,39 +46,132 @@ function createGridTexture(size: number, color: number): THREE.Texture {
 
   return texture;
 }
+
+function generateSunTexture(colorBottom: THREE.Color, colorTop: THREE.Color) {
+  const width = 1;
+  const height = 256;
+  const size = width * height;
+  const data = new Uint8Array(size * 4);
+  for (let i = 0; i < size; i++) {
+    const stride = i * 4;
+    const y = i / width;
+    const ratio = y / (height - 1);
+    const color = colorBottom.clone().lerp(colorTop, ratio);
+    data[stride] = color.r * 255;
+    data[stride + 1] = color.g * 255;
+    data[stride + 2] = color.b * 255;
+    data[stride + 3] = ratio * 255; // Use alpha for transparency
+  }
+  const texture = new THREE.DataTexture(data, width, height);
+  texture.type = THREE.UnsignedByteType;
+  texture.format = THREE.RGBAFormat;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function generateSceneBackground(
+  aspectRatio: number,
+  colorBottom: THREE.Color,
+  colorTop: THREE.Color
+) {
+  // Generate gradient textures for the skybox sides
+  const width = 2048;
+  const height = 2048;
+  const size = width * height;
+  const data = new Uint8Array(size * 4);
+  for (let i = 0; i < size; i++) {
+    const stride = i * 4;
+    const y = i / width;
+    const ratio = y / (height - 1);
+    const t = Math.pow(ratio, 0.1);
+
+    const color = colorBottom.clone().lerp(colorTop, t);
+    data[stride] = color.r * 255;
+    data[stride + 1] = color.g * 255;
+    data[stride + 2] = color.b * 255;
+    data[stride + 3] = t * 255;
+  }
+
+  const makeStar = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+
+    // Add random brightness variation to stars
+    const brightness = 0.5 + Math.random() * 0.5;
+    const intensity = Math.floor(255 * brightness);
+    data[i] = intensity;
+    data[i + 1] = intensity;
+    data[i + 2] = intensity;
+    data[i + 3] = 255;
+  };
+
+  // Add white dots to create a starry effect
+  const minStars = 1000;
+  const maxStars = 2000;
+  const starCount = Math.floor(Math.random() * maxStars) + minStars;
+  for (let i = 0; i < starCount; i++) {
+    const x = Math.floor(Math.random() * width);
+    const y = Math.floor(Math.random() * height);
+    makeStar(x, y);
+
+    // Make some stars larger
+    if (Math.random() < 0.1) {
+      const size = 1;
+      for (let dx = -size; dx <= size; ++dx) {
+        for (let dy = -size; dy <= size; ++dy) {
+          const nx = x + dx;
+          const ny = y + dy;
+          const radiusSq = dx * dx + dy * dy;
+          if (radiusSq > 1) continue;
+
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            const nIndex = (ny * width + nx) * 4;
+            makeStar(nx, ny);
+          }
+        }
+      }
+    }
+  }
+
+  const texture = new THREE.DataTexture(data, width, height);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+
+  const aspect = 1 / aspectRatio;
+
+  texture.offset.x = aspect > 1 ? (1 - 1 / aspect) / 2 : 0;
+  texture.repeat.x = aspect > 1 ? 1 / aspect : 1;
+
+  texture.offset.y = aspect > 1 ? 0 : (1 - aspect) / 2;
+  texture.repeat.y = aspect > 1 ? 1 : aspect;
+
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function fillBackground(scene: THREE.Scene, aspectRatio: number) {
+  const skyColorTop = new THREE.Color(0x000428);
+  const skyColorBottom = new THREE.Color(0xff1f5a);
+  const skyTexture = generateSceneBackground(
+    aspectRatio,
+    skyColorBottom,
+    skyColorTop
+  );
+  scene.background = skyTexture;
+}
+
 function fillScene(scene: THREE.Scene) {
   const data = {
     gridTex: null,
   };
-  {
-    // Skybox
-    const sky = new Sky();
-    sky.scale.setScalar(450000);
-
-    const phi = THREE.MathUtils.degToRad(92);
-    const theta = THREE.MathUtils.degToRad(180);
-    const sunPosition = new THREE.Vector3().setFromSphericalCoords(
-      1,
-      phi,
-      theta
-    );
-
-    sky.material.uniforms.sunPosition.value = sunPosition;
-    sky.material.uniforms.rayleigh.value = 16;
-    sky.material.uniforms.mieCoefficient.value = 0;
-    sky.material.uniforms.mieDirectionalG.value = 0;
-    sky.material.uniforms.turbidity.value = 0;
-    sky.renderOrder = -2;
-
-    scene.add(sky);
-  }
 
   {
-    var size = 64;
+    var sunSize = 56;
     var zPos = -100;
 
-    // Add black bands on top to create glitch effect
-    const band = new THREE.PlaneGeometry(2 * size, 2);
+    // Add bands on top to create glitch effect
+    const band = new THREE.PlaneGeometry(2 * sunSize, 2);
     const bandMaterial = new THREE.MeshBasicMaterial({
       color: 0x000000,
       depthTest: true,
@@ -105,13 +197,18 @@ function fillScene(scene: THREE.Scene) {
     // Create a circle to represent the sun
     const geometry = new THREE.CircleGeometry(1.0, 64);
     const material = new THREE.MeshBasicMaterial({
-      color: 0xfbc000,
+      color: 0xffffff,
       depthWrite: false,
       depthTest: true,
       depthFunc: THREE.LessDepth,
+      transparent: true,
+      map: generateSunTexture(
+        new THREE.Color(0xff1f5a),
+        new THREE.Color(0xffa500)
+      ),
     });
     const circle = new THREE.Mesh(geometry, material);
-    circle.scale.setScalar(size);
+    circle.scale.setScalar(sunSize);
     circle.position.set(0, 32, zPos - 1);
     circle.renderOrder = -1;
 
@@ -159,6 +256,7 @@ export default function Background() {
     camera.position.y = 5;
     camera.position.z = 1;
 
+    fillBackground(scene, camera.aspect);
     const sceneData = fillScene(scene);
 
     const renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -207,6 +305,8 @@ export default function Background() {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
+
+      fillBackground(scene, camera.aspect);
     };
     window.addEventListener("resize", handleResize);
 
