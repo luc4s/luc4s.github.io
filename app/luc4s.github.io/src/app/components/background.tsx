@@ -8,6 +8,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { Sky } from "three/addons/objects/Sky.js";
+import { lchown } from "node:fs";
 
 function fillScene(scene: THREE.Scene) {
   {
@@ -24,10 +25,10 @@ function fillScene(scene: THREE.Scene) {
     );
 
     sky.material.uniforms.sunPosition.value = sunPosition;
-    sky.material.uniforms.rayleigh.value = 3;
-    sky.material.uniforms.mieCoefficient.value = 0.0;
+    sky.material.uniforms.rayleigh.value = 16;
+    sky.material.uniforms.mieCoefficient.value = 0;
     sky.material.uniforms.mieDirectionalG.value = 0;
-    sky.material.uniforms.turbidity.value = 1;
+    sky.material.uniforms.turbidity.value = 0;
     sky.renderOrder = -2;
 
     scene.add(sky);
@@ -49,7 +50,7 @@ function fillScene(scene: THREE.Scene) {
     var count = 12;
     var space = 6;
     var spaceGrowth = -0.1;
-    var offsetY = 48;
+    var offsetY = 45;
     for (let i = 0; i < count; i++) {
       const bandMesh = new THREE.Mesh(band, bandMaterial);
       bandMesh.position.set(
@@ -78,7 +79,7 @@ function fillScene(scene: THREE.Scene) {
   }
 
   {
-    // Create a large plane to fill the background
+    // Generate plane grid
     const geometry = new THREE.PlaneGeometry(1, 1);
     const material = new THREE.MeshStandardMaterial({
       color: 0xff4444,
@@ -95,7 +96,6 @@ function fillScene(scene: THREE.Scene) {
     plane.position.set(0, planeY, 0);
     scene.add(plane);
 
-    // Generate plane grid
     var gridColor = 0xff00ff;
     var gridStep = 4;
 
@@ -103,39 +103,36 @@ function fillScene(scene: THREE.Scene) {
     const gridGeometryX = new THREE.BufferGeometry();
     const positionsX = [];
     for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
-      positionsX.push(i, planeY, -planeSize / 2); // Start point
-      positionsX.push(i, planeY, planeSize / 2); // End point
+      positionsX.push(i, planeY, -planeSize / 2);
+      positionsX.push(i, planeY, planeSize / 2);
     }
     gridGeometryX.setAttribute(
       "position",
       new THREE.Float32BufferAttribute(positionsX, 3)
     );
     const lineMatPrams = { color: gridColor, depthTest: false };
-    const gridMaterialX = new THREE.LineBasicMaterial(lineMatPrams);
-    const gridLinesX = new THREE.LineSegments(gridGeometryX, gridMaterialX);
+    const gridMaterial = new THREE.LineBasicMaterial(lineMatPrams);
+    const gridLinesX = new THREE.LineSegments(gridGeometryX, gridMaterial);
     scene.add(gridLinesX);
 
     // Create lines going in the Z direction
     const gridGeometryZ = new THREE.BufferGeometry();
     const positionsZ = [];
-    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
-      positionsZ.push(-planeSize / 2, planeY, i); // Start point
-      positionsZ.push(planeSize / 2, planeY, i); // End point
-    }
+    positionsZ.push(-planeSize / 2, planeY, 0);
+    positionsZ.push(planeSize / 2, planeY, 0);
     gridGeometryZ.setAttribute(
       "position",
       new THREE.Float32BufferAttribute(positionsZ, 3)
     );
-    const gridMaterialZ = new THREE.LineBasicMaterial(lineMatPrams);
-    const gridLinesZ = new THREE.LineSegments(gridGeometryZ, gridMaterialZ);
-    scene.add(gridLinesZ);
-  }
 
-  {
-    // Hemisphere light
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-    light.position.set(0, 1, 0);
-    scene.add(light);
+    const group = new THREE.Group();
+    group.name = "lines";
+    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
+      const gridLinesZ = new THREE.LineSegments(gridGeometryZ, gridMaterial);
+      gridLinesZ.position.set(0, planeY, i);
+      group.add(gridLinesZ);
+    }
+    scene.add(group);
   }
 }
 
@@ -173,7 +170,7 @@ export default function Background() {
     );
     bloomPass.threshold = 0;
     bloomPass.strength = 0.5;
-    bloomPass.radius = 0.2;
+    bloomPass.radius = 0.5;
 
     const outputPass = new OutputPass();
 
@@ -182,8 +179,21 @@ export default function Background() {
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
 
+    const lines = scene.getObjectByName("lines") as THREE.Group;
+    const animate = () => {
+      if (lines) {
+        lines.children.forEach((line) => {
+          line.position.z += 0.05;
+          if (line.position.z > 0) {
+            line.position.z = -100;
+          }
+        });
+      }
+    };
+
     // Animation loop
     renderer.setAnimationLoop(() => {
+      animate();
       composer.render();
     });
 

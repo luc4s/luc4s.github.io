@@ -39,16 +39,18 @@ body {
   align-items: stretch;
 }
 
+.post-block .content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+}
+
 .post-block img {
   border: 1px solid #00d4ff;
   margin: 8px;
-  width: 90%;
   max-height: 400px;
   object-fit: contain;
-}
-.post-block p {
-  margin: 0;
-  width: 100%;
+  float: left;
 }
 
 .post-block h1 {
@@ -69,6 +71,23 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-style: italic;
+}
+
+.post-block .link {
+  background: linear-gradient(
+    90deg,
+    #00d4ff,
+    #ff00de
+  );
+  font-weight: 800;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-style: italic;
+  text-align: right;
+
+  padding-top: 24px;
 }
 
 @keyframes textShadowRotate {
