@@ -27,9 +27,6 @@ export default function Background() {
     camera.position.y = 5;
     camera.position.z = 1;
 
-    fillBackground(scene, camera.aspect);
-    const sceneData = fillScene(scene);
-
     const renderer = new THREE.WebGLRenderer({ antialias: false });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -43,9 +40,9 @@ export default function Background() {
       0.4,
       0.85
     );
-    bloomPass.threshold = 0;
+    bloomPass.threshold = 0.01;
     bloomPass.strength = 0.5;
-    bloomPass.radius = 0.5;
+    bloomPass.radius = 0.2;
 
     const outputPass = new OutputPass();
 
@@ -54,19 +51,35 @@ export default function Background() {
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
 
-    const gridTex = sceneData.gridTex as THREE.Texture | null;
-    let animate = () => {};
-    if (gridTex) {
-      animate = () => {
-        // gridTex.offset.x += 0.005;
-        gridTex.offset.y += 0.005;
-        gridTex.needsUpdate = true;
-      };
-    }
+    let gridTex: THREE.Texture | null = null;
+    let carMixer: THREE.AnimationMixer | null = null;
+    let carObject: THREE.Object3D | null = null;
+    fillBackground(scene, camera.aspect);
+    fillScene(scene).then((data) => {
+      gridTex = data.gridTex;
+      carMixer = data.carMixer;
+      carObject = data.carObject;
+    });
+
+    const clock = new THREE.Clock();
+    const carSpeed = new THREE.Vector3(0, 0, 0);
 
     // Animation loop
     renderer.setAnimationLoop(() => {
-      animate();
+      const delta = clock.getDelta();
+      if (gridTex) {
+        gridTex.offset.y += delta;
+        gridTex.needsUpdate = true;
+      }
+
+      if (carMixer) {
+        carMixer.update(delta);
+      }
+
+      if (carObject) {
+        carObject.position.add(carSpeed.clone().multiplyScalar(delta));
+      }
+
       composer.render();
     });
 
@@ -80,6 +93,33 @@ export default function Background() {
       fillBackground(scene, camera.aspect);
     };
     window.addEventListener("resize", handleResize);
+
+    // Add controls for the car
+    const speed = 2;
+    window.addEventListener("keydown", (event) => {
+      switch (event.key) {
+        case "ArrowLeft":
+        case "a":
+          carSpeed.x = -speed;
+          break;
+        case "ArrowRight":
+        case "d":
+          carSpeed.x = speed;
+          break;
+      }
+      return true;
+    });
+    window.addEventListener("keyup", (event) => {
+      switch (event.key) {
+        case "ArrowLeft":
+        case "ArrowRight":
+        case "a":
+        case "d":
+          carSpeed.set(0, 0, 0);
+          break;
+      }
+      return true;
+    });
 
     // Cleanup
     return () => {

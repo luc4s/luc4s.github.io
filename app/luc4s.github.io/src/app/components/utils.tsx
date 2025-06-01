@@ -1,8 +1,24 @@
-"use client";
 import * as Noise from "noisejs";
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-export function createGridTexture(size: number, color: number): THREE.Texture {
+function loadCar(scene: THREE.Scene) {
+  const loader = new GLTFLoader();
+  const promise = new Promise<THREE.Object3D>((resolve, reject) => {
+    loader.load(
+      "models/testarossa.glb",
+      (gltf) => {
+        resolve(gltf);
+      },
+      function () {},
+      function (error) {
+        reject(error);
+      }
+    );
+  });
+  return promise;
+}
+function createGridTexture(size: number, color: number): THREE.Texture {
   // For tiling, size must be a power of 2
   const sideLength = Math.pow(2, Math.ceil(Math.log2(size)));
   const data = new Uint8Array(sideLength * sideLength * 4);
@@ -40,10 +56,7 @@ export function createGridTexture(size: number, color: number): THREE.Texture {
 
   return texture;
 }
-export function generateSunTexture(
-  colorBottom: THREE.Color,
-  colorTop: THREE.Color
-) {
+function generateSunTexture(colorBottom: THREE.Color, colorTop: THREE.Color) {
   const width = 1;
   const height = 256;
   const size = width * height;
@@ -66,7 +79,7 @@ export function generateSunTexture(
   texture.needsUpdate = true;
   return texture;
 }
-export function generateSceneBackground(
+function generateSceneBackground(
   aspectRatio: number,
   colorBottom: THREE.Color,
   colorTop: THREE.Color
@@ -143,7 +156,7 @@ export function generateSceneBackground(
   texture.needsUpdate = true;
   return texture;
 }
-export function generateMountains() {
+function generateMountains() {
   const noise = new Noise.Noise(Math.random());
 
   const size = 256;
@@ -201,6 +214,7 @@ export function generateMountains() {
   group.add(lines);
   return group;
 }
+
 export function fillBackground(scene: THREE.Scene, aspectRatio: number) {
   const skyColorTop = new THREE.Color(0x000428);
   const skyColorBottom = new THREE.Color(0xff1f5a);
@@ -211,10 +225,18 @@ export function fillBackground(scene: THREE.Scene, aspectRatio: number) {
   );
   scene.background = skyTexture;
 }
+
 export function fillScene(scene: THREE.Scene) {
   const data = {
     gridTex: null,
+    carMixer: null,
+    carObject: null,
   };
+
+  let promiseResolve: (data: any) => void;
+  const promise = new Promise<typeof data>((resolve) => {
+    promiseResolve = resolve;
+  });
 
   {
     var sunSize = 56;
@@ -272,9 +294,11 @@ export function fillScene(scene: THREE.Scene) {
     // Generate plane grid
     const gridTexture = createGridTexture(256, 0xff00ffff);
     const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshBasicMaterial({
+    const material = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       map: gridTexture,
+      roughness: 0.5,
+      metalness: 0.6,
     });
 
     const plane = new THREE.Mesh(geometry, material);
@@ -296,5 +320,35 @@ export function fillScene(scene: THREE.Scene) {
     scene.add(mountainsObj);
   }
 
-  return data;
+  {
+    loadCar(scene)
+      .then((gltf) => {
+        const carObject = gltf.scene;
+        carObject.scale.setScalar(1.5);
+        carObject.position.set(10, 0, -10);
+        carObject.rotation.y = Math.PI;
+        scene.add(carObject);
+
+        // Animations
+        const mixer = new THREE.AnimationMixer(carObject);
+        gltf.animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          action.timeScale = 8;
+          action.play();
+        });
+
+        data["carObject"] = carObject;
+        data["carMixer"] = mixer;
+        promiseResolve(data);
+      })
+      .catch((error) => {
+        console.error("Error loading car model:", error);
+      });
+  }
+
+  // Add some light
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+  scene.add(ambientLight);
+
+  return promise;
 }

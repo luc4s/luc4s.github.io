@@ -12,6 +12,30 @@
   --font-mono: var(--font-geist-mono);
 }
 
+
+@keyframes textShadowRotate {
+  0% {
+    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
+                 5px -5px 6px rgba(0, 212, 255, 0.5),
+                 5px 5px 10px rgba(0, 255, 127, 0.5);
+  }
+  33% {
+    text-shadow: 0 5px 3px rgba(212, 0, 255, 0.5),
+                 0 5px 6px rgba(0, 212, 255, 0.5),
+                 -5px 5px 10px rgba(0, 255, 127, 0.5);
+  }
+  66% {
+    text-shadow: -5px 0 3px rgba(255, 0, 222, 0.89),
+                 -5px 0 6px rgba(0, 212, 255, 0.5),
+                 5px -5px 10px rgba(0, 255, 127, 0.5);
+  }
+  100% {
+    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
+                 5px -5px 6px rgba(0, 212, 255, 0.5),
+                 5px 5px 10px rgba(0, 255, 127, 0.5);
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -21,22 +45,25 @@ body {
 .container {
   display: flex;
   flex-direction: column;
-  align-items: left;
+  align-items: stretch;
   min-height: 100vh;
   padding: 20px;
   gap: 32px;
 }
 
 .post-block {
+  width: 100%;
   padding: 20px;
-  margin: 0;
   background: var(--color-background);
+  color: #2574fc;
+  text-align: justify;
 
-  border: 1px solid var(--color-foreground);
+  border: 1px solid #2574fc;
 
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  justify-items: stretch;
 }
 
 .post-block .content {
@@ -46,7 +73,7 @@ body {
 }
 
 .post-block img {
-  border: 1px solid #00d4ff;
+  border: 1px solid #2574fc;
   margin: 8px;
   max-height: 400px;
   object-fit: contain;
@@ -120,27 +147,18 @@ body {
   padding-top: 24px;
 }
 
-@keyframes textShadowRotate {
-  0% {
-    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
-                 5px -5px 6px rgba(0, 212, 255, 0.5),
-                 5px 5px 10px rgba(0, 255, 127, 0.5);
-  }
-  33% {
-    text-shadow: 0 5px 3px rgba(212, 0, 255, 0.5),
-                 0 5px 6px rgba(0, 212, 255, 0.5),
-                 -5px 5px 10px rgba(0, 255, 127, 0.5);
-  }
-  66% {
-    text-shadow: -5px 0 3px rgba(255, 0, 222, 0.89),
-                 -5px 0 6px rgba(0, 212, 255, 0.5),
-                 5px -5px 10px rgba(0, 255, 127, 0.5);
-  }
-  100% {
-    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
-                 5px -5px 6px rgba(0, 212, 255, 0.5),
-                 5px 5px 10px rgba(0, 255, 127, 0.5);
-  }
+.post-block .link a:hover {
+  border-bottom: 1px solid #00d4ff;
+}
+
+.post-block .credits {
+  color: #a560b9;
+  font-style: italic;
+}
+
+.post-block .credits a {
+  text-decoration: underline;
+  font-weight: bold;
 }
 
 .background_three
@@ -152,4 +170,23 @@ body {
   height: 100%;
   background: black;
   z-index: -1;
+}
+
+div.noscript {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  background: linear-gradient(to bottom, #1a0f1f88, #751dbd88, #0a0505);
+}
+div.noscript div {
+  text-align: center;
+  margin: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
