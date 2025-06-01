@@ -8,8 +8,41 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { Sky } from "three/addons/objects/Sky.js";
-import { lchown } from "node:fs";
 
+function createGridTexture(size: number, color: number): THREE.Texture {
+  // For tiling, size must be a power of 2
+  const sideLength = Math.pow(2, Math.ceil(Math.log2(size)));
+  const data = new Uint8Array(sideLength * sideLength * 4);
+  for (let i = 0; i < sideLength; i++) {
+    for (let j = 0; j < sideLength; j++) {
+      const index = (i * sideLength + j) * 4;
+      if (i == 0 || j == 0 || i == sideLength - 1 || j == sideLength - 1) {
+        data[index] = (color >> 24) & 0xff;
+        data[index + 1] = (color >> 16) & 0xff;
+        data[index + 2] = (color >> 8) & 0xff;
+        data[index + 3] = color & 0xff;
+      } else {
+        data[index] = 0;
+        data[index + 1] = 0;
+        data[index + 2] = 0;
+        data[index + 3] = 255;
+      }
+    }
+  }
+  const texture = new THREE.DataTexture(data, sideLength, sideLength, 1);
+  texture.type = THREE.UnsignedByteType;
+  texture.format = THREE.RGBAFormat;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 8; // TODO Get that value from renderer
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.generateMipmaps = true;
+  texture.repeat.setScalar(size / 2);
+  texture.needsUpdate = true;
+
+  return texture;
+}
 function fillScene(scene: THREE.Scene) {
   {
     // Skybox
@@ -72,67 +105,29 @@ function fillScene(scene: THREE.Scene) {
     });
     const circle = new THREE.Mesh(geometry, material);
     circle.scale.setScalar(size);
-    circle.position.set(0, 32, zPos - 1); // Position the sun above groung
+    circle.position.set(0, 32, zPos - 1);
     circle.renderOrder = -1;
 
     scene.add(circle);
   }
 
   {
-    // Generate plane grid
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xff4444,
-      metalness: 1.0,
-      roughness: 0.1,
-    });
-
     var planeY = 0;
     var planeSize = 256;
+
+    // Generate plane grid
+    const gridTexture = createGridTexture(256, 0xff00ffff);
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      map: gridTexture,
+    });
 
     const plane = new THREE.Mesh(geometry, material);
     plane.scale.set(planeSize, planeSize, 1);
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(0, planeY, 0);
     scene.add(plane);
-
-    var gridColor = 0xff00ff;
-    var gridStep = 4;
-
-    // Create lines going in the X direction
-    const gridGeometryX = new THREE.BufferGeometry();
-    const positionsX = [];
-    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
-      positionsX.push(i, planeY, -planeSize / 2);
-      positionsX.push(i, planeY, planeSize / 2);
-    }
-    gridGeometryX.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positionsX, 3)
-    );
-    const lineMatPrams = { color: gridColor, depthTest: false };
-    const gridMaterial = new THREE.LineBasicMaterial(lineMatPrams);
-    const gridLinesX = new THREE.LineSegments(gridGeometryX, gridMaterial);
-    scene.add(gridLinesX);
-
-    // Create lines going in the Z direction
-    const gridGeometryZ = new THREE.BufferGeometry();
-    const positionsZ = [];
-    positionsZ.push(-planeSize / 2, planeY, 0);
-    positionsZ.push(planeSize / 2, planeY, 0);
-    gridGeometryZ.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positionsZ, 3)
-    );
-
-    const group = new THREE.Group();
-    group.name = "lines";
-    for (let i = -planeSize / 2; i <= planeSize / 2; i += gridStep) {
-      const gridLinesZ = new THREE.LineSegments(gridGeometryZ, gridMaterial);
-      gridLinesZ.position.set(0, planeY, i);
-      group.add(gridLinesZ);
-    }
-    scene.add(group);
   }
 }
 
