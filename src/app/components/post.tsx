@@ -19,7 +19,7 @@ export default function Post({
   return (
     <div className="post-block">
       {title && <h1 className={titleClass}>{title}</h1>}
-      <div className="content">
+      <div className="content flex flex-col lg:grid-cols-2 lg:grid">
         {image && (
           <Image src={image} alt={title || ""} width={800} height={800} />
         )}
