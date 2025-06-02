@@ -1,2 +1,5 @@
 # Portofolio page
-Made with React + NextJS
+Made with :
+- React / NextJS
+- ThreeJS
+- NoiseJS
