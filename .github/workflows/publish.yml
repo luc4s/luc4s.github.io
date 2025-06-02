@@ -30,15 +30,12 @@ jobs:
           static_site_generator: next
 
       - name: Build with Next.js 🏗️
-        run: pwd
-        run: npm run build --verbose
+        run: pwd && npm run build --verbose
 
       - name: (Debug) List
-        run: pwd
-        run: ls -la .
+        run: pwd && ls -la .
 
       - name: Fix permissions
-        run: pwd
         run: |
           chmod -c -R +rX "dist/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
