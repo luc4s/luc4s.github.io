@@ -33,9 +33,8 @@ jobs:
         run: npx next build
 
       - name: Upload artifact 📡
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: next-js-static-artifact
           path: dist/
 
   deploy:
