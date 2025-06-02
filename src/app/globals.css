@@ -15,24 +15,24 @@
 
 @keyframes textShadowRotate {
   0% {
-    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
-                 5px -5px 6px rgba(0, 212, 255, 0.5),
-                 5px 5px 10px rgba(0, 255, 127, 0.5);
+  text-shadow: 5px 5px 1px rgba(255, 0, 222, 0.5),
+               7px 7px 1px rgba(0, 212, 255, 0.5),
+               10px 10px 1px rgba(0, 255, 127, 0.5);
   }
   33% {
-    text-shadow: 0 5px 3px rgba(212, 0, 255, 0.5),
-                 0 5px 6px rgba(0, 212, 255, 0.5),
-                 -5px 5px 10px rgba(0, 255, 127, 0.5);
+  text-shadow: 5px 5px 1px rgba(0, 255, 127, 0.5),
+               7px 7px 1px rgba(255, 0, 222, 0.5),
+               10px 10px 1px rgba(0, 212, 255, 0.5);
   }
   66% {
-    text-shadow: -5px 0 3px rgba(255, 0, 222, 0.89),
-                 -5px 0 6px rgba(0, 212, 255, 0.5),
-                 5px -5px 10px rgba(0, 255, 127, 0.5);
+  text-shadow: 5px 5px 1px rgba(0, 212, 255, 0.5),
+               7px 7px 1px rgba(0, 255, 127, 0.5),
+               10px 10px 1px rgba(255, 0, 222, 0.5);
   }
   100% {
-    text-shadow: -5px 5px 3px rgba(255, 0, 222, 0.5),
-                 5px -5px 6px rgba(0, 212, 255, 0.5),
-                 5px 5px 10px rgba(0, 255, 127, 0.5);
+  text-shadow: 5px 5px 1px rgba(255, 0, 222, 0.5),
+               7px 7px 1px rgba(0, 212, 255, 0.5),
+               10px 10px 1px rgba(0, 255, 127, 0.5);
   }
 }
 
@@ -67,8 +67,6 @@ body {
 }
 
 .post-block .content {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
   grid-gap: 20px;
 }
 
@@ -102,12 +100,11 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 5px 3px rgba(255, 0, 222, 0.5),
-               5px 0 20px rgba(0, 212, 255, 0.5),
-               5px 5px 30px rgba(0, 255, 127, 0.5);
+  text-shadow: 5px 5px 1px rgba(255, 0, 222, 0.5),
+               7px 7px 1px rgba(0, 212, 255, 0.5),
+               10px 10px 1px rgba(0, 255, 127, 0.5);
 
-  animation: textShadowRotate 2s infinite linear;
-  transition: text-shadow 0.3s ease-in-out;
+  animation: textShadowRotate 2s infinite steps(1);
 }
 
 .post-block h1 {
@@ -159,6 +156,14 @@ body {
 .post-block .credits a {
   text-decoration: underline;
   font-weight: bold;
+}
+
+.post-block h2 {
+  color: #a560b9;
+  font-style: italic;
+  font-weight: bold;
+  font-size: larger;
+  margin-top: 1em;
 }
 
 .background_three
