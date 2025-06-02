@@ -38,12 +38,12 @@ jobs:
       - name: (Debug) Where is out?
         run: |
           pwd
-          find . -maxdepth 3 -type d -name out -print
+          find . -maxdepth 3 -type d -name build -print
 
       - name: Upload artifact 📡
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./build
 
   deploy:
     environment:
