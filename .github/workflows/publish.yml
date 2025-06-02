@@ -35,6 +35,11 @@ jobs:
       - name: (Debug) List
         run: ls -la .
 
+      - name: (Debug) Where is out?
+        run: |
+          pwd
+          find . -maxdepth 3 -type d -name out -print
+
       - name: Upload artifact 📡
         uses: actions/upload-pages-artifact@v3
         with:
