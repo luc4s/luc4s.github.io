@@ -30,21 +30,15 @@ jobs:
           static_site_generator: next
 
       - name: Build with Next.js 🏗️
-        run: pwd && npm run build --verbose
+        run: npm run build --verbose
 
       - name: (Debug) List
-        run: pwd && ls -la .
-
-      - name: Fix permissions
-        run: |
-          chmod -c -R +rX "dist/" | while read line; do
-            echo "::warning title=Invalid file permissions automatically fixed::$line"
-          done
+        run: ls -la .
 
       - name: Upload artifact 📡
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/
+          path: ./out
 
   deploy:
     environment:
