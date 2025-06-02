@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "7uc4s",
+  title: "Lucas Monnin's Web Page",
   description: "Projects and experiments by Lucas Monnin",
 };
 
