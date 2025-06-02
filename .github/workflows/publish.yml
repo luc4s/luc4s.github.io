@@ -24,16 +24,14 @@ jobs:
       - name: Setup Node.js ⚙️ - Cache dependencies ⚡ - Install dependencies 🔧
         uses: ./.github/workflows/setup-node
 
+      - name: Setup Pages ⚙️
+        uses: actions/configure-pages@v4
+        with:
+          static_site_generator: next
+          generator_config_file: ./next.config.ts
+
       - name: Build with Next.js 🏗️
-        run: npm run build --verbose
-
-      - name: (Debug) List
-        run: ls -la .
-
-      - name: (Debug) Where is out?
-        run: |
-          pwd
-          find . -maxdepth 3 -type d -name build -print
+        run: npm run build
 
       - name: Upload artifact 📡
         uses: actions/upload-pages-artifact@v3

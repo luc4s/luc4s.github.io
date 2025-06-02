@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lucas Monnin's Web Page",
-  description: "Projects and experiments by Lucas Monnin",
+  title: "£Ʊ¢Ʌ§ ɱɵ₪₪ᵻ₪ ",
+  description: "Projects and experiments",
 };
 
 export default function RootLayout({
