@@ -63,12 +63,13 @@ export default function Background() {
 
     const clock = new THREE.Clock();
     const carSpeed = new THREE.Vector3(0, 0, 0);
+    const gridSpeed = 6;
 
     // Animation loop
     renderer.setAnimationLoop(() => {
       const delta = clock.getDelta();
       if (gridTex) {
-        gridTex.offset.y += delta;
+        gridTex.offset.y += delta * gridSpeed;
         gridTex.needsUpdate = true;
       }
 
@@ -95,7 +96,7 @@ export default function Background() {
     window.addEventListener("resize", handleResize);
 
     // Add controls for the car
-    const speed = 2;
+    const speed = 8;
     window.addEventListener("keydown", (event) => {
       switch (event.key) {
         case "ArrowLeft":

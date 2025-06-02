@@ -332,7 +332,7 @@ export function fillScene(scene: THREE.Scene) {
         const mixer = new THREE.AnimationMixer(carObject);
         gltf.animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
-          action.timeScale = 8;
+          action.timeScale = 32;
           action.play();
         });
 
