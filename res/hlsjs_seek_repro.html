@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>hls.js 1.6.17 vs 1.6.18 seek repro</title></head>
+<body style="background:#111;color:#eee;font-family:monospace;display:flex;flex-wrap:wrap;gap:12px;padding:12px">
+<script>
+const SRC = 'https://raw.githubusercontent.com/luc4s/luc4s.github.io/refs/heads/master/res/elephants_dream_hls_fixture/master.m3u8';
+const T = 51.0;
+const VERSIONS = ['1.6.17', '1.6.18'];
+
+const loadHls = ver => new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = `https://cdn.jsdelivr.net/npm/hls.js@${ver}/dist/hls.min.js`;
+  s.onload = () => { const H = window.Hls; delete window.Hls; res(H); };
+  s.onerror = () => rej(new Error('failed to load hls.js ' + ver));
+  document.head.appendChild(s);
+});
+
+function makePanel(ver) {
+  const div = document.createElement('div');
+  div.innerHTML = `<div style="margin-bottom:4px">hls.js ${ver}</div>
+    <video width="560" muted></video>
+    <div class="status" style="margin-top:4px;color:#8f8"></div>`;
+  document.body.appendChild(div);
+  return { video: div.querySelector('video'), status: div.querySelector('.status') };
+}
+
+(async () => {
+  for (const ver of VERSIONS) {
+    const { video, status } = makePanel(ver);
+    status.textContent = 'loading…';
+    const H = await loadHls(ver);
+    const hls = new H({ debug: true });
+    console.log(`>>> ${ver}: hls.version = ${H.version}`);
+    hls.loadSource(SRC);
+    hls.attachMedia(video);
+    hls.on(H.Events.MANIFEST_PARSED, () => {
+      status.textContent = 'buffering, seeking to ' + T + '…';
+      video.currentTime = T;
+    });
+    video.addEventListener('seeked', () => {
+      status.textContent = `seeked: currentTime=${video.currentTime.toFixed(6)} (paused)`;
+    });
+    hls.on(H.Events.ERROR, (_, data) => {
+      if (data.fatal) status.textContent = 'FATAL: ' + data.details;
+    });
+    // wait for this version to finish seeking before loading the next,
+    // so the two hls.js globals never coexist
+    await new Promise(r => video.addEventListener('seeked', r, { once: true }));
+  }
+  const note = document.createElement('div');
+  note.style.cssText = 'width:100%;color:#ff8';
+  note.textContent = 'Compare the two paused frames above — they should be identical, ' +
+    'but 1.6.18 presents a frame ~83ms (2 frames @ 24fps) offset from 1.6.17. ' +
+    'Console has the debug logs: filter for "initPTS".';
+  document.body.appendChild(note);
+})();
+</script>
+</body>
+</html>
