@@ -1,0 +1,10 @@
+#EXTM3U
+#EXT-X-VERSION:3
+
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="Original",DEFAULT=YES,AUTOSELECT=YES,LANGUAGE="en",URI="audio_original/playlist.m3u8"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="Audio Description",DEFAULT=NO,AUTOSELECT=NO,LANGUAGE="en",CHARACTERISTICS="public.accessibility.describes-video",URI="audio_ad/playlist.m3u8"
+
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",DEFAULT=YES,AUTOSELECT=YES,FORCED=NO,LANGUAGE="en",URI="subs/playlist.m3u8"
+
+#EXT-X-STREAM-INF:BANDWIDTH=3000000,AUDIO="audio",SUBTITLES="subs"
+video/playlist.m3u8
